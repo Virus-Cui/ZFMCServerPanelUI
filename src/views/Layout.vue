@@ -1,0 +1,112 @@
+<script setup>
+import {ref} from 'vue'
+import axios from "axios";
+import {ElMessage} from "element-plus";
+
+let wss = new WebSocket("ws://127.0.0.1:5200/log/1745625805445849088")
+
+const msg = ref([])
+const cmd = ref()
+const interval = ref()
+const loading = ref(false)
+
+const startKeepAlive = () => {
+  interval.value = setInterval(() => {
+    wss.send("keepalive")
+  }, 1000)
+}
+
+const onWebSocketMessage = (event) => {
+  let data = JSON.parse(event.data);
+  switch (data.type){
+    case 0:
+      msg.value.push(data.data)
+      break;
+    case 2:
+      ElMessage.info({
+        message: data.data
+      })
+      break;
+  }
+  setTimeout(()=>{
+    let doc = document.getElementById("cmd")
+    console.log(doc.scrollHeight)
+    doc.scrollTop = doc.scrollHeight
+  },50)
+
+}
+
+const onOpen = () => {
+  startKeepAlive()
+  loading.value = false
+}
+
+const onClose = () => {
+  console.log("关闭连接")
+  clearInterval(interval.value)
+  loading.value = true
+  // 重连
+  setTimeout(() => {
+    wss = new WebSocket("ws://127.0.0.1:5200/log/1745625805445849088")
+    wss.onmessage = onWebSocketMessage
+    wss.onclose = onClose
+    wss.onopen = onOpen
+  }, 1000)
+
+}
+
+wss.onmessage = onWebSocketMessage
+wss.onclose = onClose
+wss.onopen = onOpen
+
+const stop = () => {
+  axios.post("http://127.0.0.1:5200/container/cmd/1745625805445849088", "stop").then(resp => {
+    ElMessage.success({
+      message: '停止成功'
+    })
+  })
+}
+
+const start = () => {
+  axios.get("http://127.0.0.1:5200/container/start/1745625805445849088").then(resp => {
+    ElMessage.success({
+      message: '开启成功'
+    })
+  })
+}
+
+const send = () => {
+  axios.post("http://127.0.0.1:5200/container/cmd/1745625805445849088", cmd.value).then(resp => {
+    ElMessage.success({
+      message: `发送指令${cmd.value}成功`
+    })
+  })
+}
+
+
+</script>
+
+<template>
+  <div v-loading="loading">
+    <el-button type="danger" plain @click="stop">停止实例</el-button>
+    <el-button type="primary" plain @click="start">开启实例</el-button>
+    <div class="cmdview" id="cmd">
+      <div class="line" v-for="item in msg">{{ item }}</div>
+    </div>
+    <el-form-item style="margin-top: 1rem;">
+      <el-input style="width: 200px;margin-right: 1rem" v-model="cmd" placeholder="命令"></el-input>
+      <el-button type="warning" @click="send">发送指令</el-button>
+    </el-form-item>
+  </div>
+
+</template>
+
+<style scoped>
+.cmdview {
+  color: #FFF;
+  width: 1000px;
+  height: 400px;
+  background: black;
+  overflow: auto;
+}
+</style>
