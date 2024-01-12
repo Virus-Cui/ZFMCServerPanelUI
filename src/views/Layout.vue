@@ -1,24 +1,28 @@
 <script setup>
-import {ref} from 'vue'
+import {ref, onMounted} from 'vue'
+import {useRoute} from "vue-router";
 import axios from "axios";
 import {ElMessage} from "element-plus";
 
-let wss = new WebSocket("ws://127.0.0.1:5200/log/1745625805445849088")
 
 const msg = ref([])
 const cmd = ref()
 const interval = ref()
 const loading = ref(false)
+const containerId = ref()
+const wss = ref()
+
+
 
 const startKeepAlive = () => {
   interval.value = setInterval(() => {
-    wss.send("keepalive")
+    wss.value.send("keepalive")
   }, 1000)
 }
 
 const onWebSocketMessage = (event) => {
   let data = JSON.parse(event.data);
-  switch (data.type){
+  switch (data.type) {
     case 0:
       msg.value.push(data.data)
       break;
@@ -28,11 +32,11 @@ const onWebSocketMessage = (event) => {
       })
       break;
   }
-  setTimeout(()=>{
+  setTimeout(() => {
     let doc = document.getElementById("cmd")
     console.log(doc.scrollHeight)
     doc.scrollTop = doc.scrollHeight
-  },50)
+  }, 50)
 
 }
 
@@ -47,20 +51,27 @@ const onClose = () => {
   loading.value = true
   // 重连
   setTimeout(() => {
-    wss = new WebSocket("ws://127.0.0.1:5200/log/1745625805445849088")
-    wss.onmessage = onWebSocketMessage
-    wss.onclose = onClose
-    wss.onopen = onOpen
+    wss.value = new WebSocket("ws://127.0.0.1:5200/log/" + containerId.value)
+    wss.value.onmessage = onWebSocketMessage
+    wss.value.onclose = onClose
+    wss.value.onopen = onOpen
   }, 1000)
 
 }
 
-wss.onmessage = onWebSocketMessage
-wss.onclose = onClose
-wss.onopen = onOpen
+onMounted(() => {
+  containerId.value = useRoute().query.containerId
+  console.log(containerId.value)
+  wss.value = new WebSocket("ws://127.0.0.1:5200/log/" + containerId.value)
+  wss.value.onmessage = onWebSocketMessage
+  wss.value.onclose = onClose
+  wss.value.onopen = onOpen
+})
+
+
 
 const stop = () => {
-  axios.post("http://127.0.0.1:5200/container/cmd/1745625805445849088", "stop").then(resp => {
+  axios.post("http://127.0.0.1:5200/container/cmd/" + containerId.value, "stop").then(resp => {
     ElMessage.success({
       message: '停止成功'
     })
@@ -68,7 +79,7 @@ const stop = () => {
 }
 
 const start = () => {
-  axios.get("http://127.0.0.1:5200/container/start/1745625805445849088").then(resp => {
+  axios.get("http://127.0.0.1:5200/container/start/" + containerId.value).then(resp => {
     ElMessage.success({
       message: '开启成功'
     })
@@ -76,7 +87,7 @@ const start = () => {
 }
 
 const send = () => {
-  axios.post("http://127.0.0.1:5200/container/cmd/1745625805445849088", cmd.value).then(resp => {
+  axios.post("http://127.0.0.1:5200/container/cmd/" + containerId.value, cmd.value).then(resp => {
     ElMessage.success({
       message: `发送指令${cmd.value}成功`
     })
