@@ -1,123 +1,116 @@
 <script setup>
-import {ref, onMounted} from 'vue'
-import {useRoute} from "vue-router";
+import {ref, onMounted, watch} from 'vue'
+import {useRoute, useRouter} from "vue-router";
 import axios from "axios";
-import {ElMessage} from "element-plus";
+import {Folder, HomeFilled, Location, Menu, Promotion, Setting} from "@element-plus/icons-vue";
 
-
-const msg = ref([])
-const cmd = ref()
-const interval = ref()
-const loading = ref(false)
-const containerId = ref()
-const wss = ref()
-
-
-
-const startKeepAlive = () => {
-  interval.value = setInterval(() => {
-    wss.value.send("keepalive")
-  }, 1000)
-}
-
-const onWebSocketMessage = (event) => {
-  let data = JSON.parse(event.data);
-  switch (data.type) {
-    case 0:
-      msg.value.push(data.data)
-      break;
-    case 2:
-      ElMessage.info({
-        message: data.data
-      })
-      break;
-  }
-  setTimeout(() => {
-    let doc = document.getElementById("cmd")
-    console.log(doc.scrollHeight)
-    doc.scrollTop = doc.scrollHeight
-  }, 50)
-
-}
-
-const onOpen = () => {
-  startKeepAlive()
-  loading.value = false
-}
-
-const onClose = () => {
-  console.log("关闭连接")
-  clearInterval(interval.value)
-  loading.value = true
-  // 重连
-  setTimeout(() => {
-    wss.value = new WebSocket("ws://127.0.0.1:5200/log/" + containerId.value)
-    wss.value.onmessage = onWebSocketMessage
-    wss.value.onclose = onClose
-    wss.value.onopen = onOpen
-  }, 1000)
-
-}
-
-onMounted(() => {
-  containerId.value = useRoute().query.containerId
-  console.log(containerId.value)
-  wss.value = new WebSocket("ws://127.0.0.1:5200/log/" + containerId.value)
-  wss.value.onmessage = onWebSocketMessage
-  wss.value.onclose = onClose
-  wss.value.onopen = onOpen
-})
-
-
-
-const stop = () => {
-  axios.post("http://127.0.0.1:5200/container/cmd/" + containerId.value, "stop").then(resp => {
-    ElMessage.success({
-      message: '停止成功'
-    })
+const router = useRouter();
+const navigateToIndex = ()=>{
+  router.push({
+    path: '/'
   })
 }
-
-const start = () => {
-  axios.get("http://127.0.0.1:5200/container/start/" + containerId.value).then(resp => {
-    ElMessage.success({
-      message: '开启成功'
-    })
-  })
-}
-
-const send = () => {
-  axios.post("http://127.0.0.1:5200/container/cmd/" + containerId.value, cmd.value).then(resp => {
-    ElMessage.success({
-      message: `发送指令${cmd.value}成功`
-    })
-  })
-}
-
 
 </script>
 
 <template>
-  <div v-loading="loading">
-    <el-button type="danger" plain @click="stop">停止实例</el-button>
-    <el-button type="primary" plain @click="start">开启实例</el-button>
-    <div class="cmdview" id="cmd">
-      <div class="line" v-for="item in msg">{{ item }}</div>
-    </div>
-    <el-form-item style="margin-top: 1rem;">
-      <el-input style="width: 200px;margin-right: 1rem" v-model="cmd" placeholder="命令"></el-input>
-      <el-button type="warning" @click="send">发送指令</el-button>
-    </el-form-item>
+  <div class="common-layout">
+    <el-container>
+      <el-aside width="200px">
+        <el-menu
+            active-text-color="#409eff"
+            background-color="#1f2020"
+            text-color="#fff"
+            router
+            :default-active="router.currentRoute.value.fullPath"
+        >
+          <el-menu-item @click="navigateToIndex">
+            <template #default>
+              <el-icon>
+                <img src="@/assets/logo-256px.png" width="28">
+              </el-icon>
+              <span>&nbsp;ZFMCServerPanel</span>
+            </template>
+          </el-menu-item>
+          <el-menu-item :index="'/'" route="/">
+            <template #default>
+              <el-icon><HomeFilled /></el-icon>
+              <span>首页</span>
+            </template>
+          </el-menu-item>
+          <el-menu-item :index="'/container'" route="/container">
+            <template #default>
+              <el-icon><Menu /></el-icon>
+              <span>应用实例</span>
+            </template>
+          </el-menu-item>
+          <el-menu-item :index="'/frp'" route="/frp">
+            <template #default>
+              <el-icon><Promotion /></el-icon>
+              <span>FRP</span>
+            </template>
+          </el-menu-item>
+          <el-menu-item :index="'/settings'" route="/settings">
+            <template #default>
+              <el-icon><Setting /></el-icon>
+              <span>系统设置</span>
+            </template>
+          </el-menu-item>
+          <el-menu-item :index="'/files'" route="/files">
+            <template #default>
+              <el-icon><Folder /></el-icon>
+              <span>资源管理器</span>
+            </template>
+          </el-menu-item>
+        </el-menu>
+      </el-aside>
+      <el-container>
+        <el-header></el-header>
+        <el-main>
+          <router-view/>
+        </el-main>
+        <el-footer>Powered By ZFCloud</el-footer>
+      </el-container>
+    </el-container>
   </div>
-
 </template>
 
-<style scoped>
-.cmdview {
+<style scoped lang="scss">
+.common-layout{
+  width: 100vw;
+  height: 100vh;
+}
+
+.el-container {
+  height: 100%;
+}
+
+.el-header,
+.el-footer {
   color: #FFF;
-  width: 1000px;
-  height: 400px;
-  background: black;
-  overflow: auto;
+}
+.el-header {
+  background: #1c1b1b url("../assets/trans-top-darkwool.png");
+}
+
+.el-footer{
+  display: flex;
+  align-items: center;
+  background: #1c1b1b;
+}
+
+.el-aside {
+  color: #FFF;
+  background: #1c1b1b url("../assets/bg-wool-dark.png") repeat;
+}
+
+.el-main {
+  background-color: #1f2020;
+  color: #FFF;
+}
+
+.el-menu {
+  background-color: transparent;
+  border: none;
 }
 </style>
