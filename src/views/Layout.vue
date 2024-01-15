@@ -11,6 +11,7 @@ const navigateToIndex = ()=>{
   })
 }
 
+
 </script>
 
 <template>
@@ -50,18 +51,19 @@ const navigateToIndex = ()=>{
               <span>FRP</span>
             </template>
           </el-menu-item>
-          <el-menu-item :index="'/settings'" route="/settings">
-            <template #default>
-              <el-icon><Setting /></el-icon>
-              <span>系统设置</span>
-            </template>
-          </el-menu-item>
           <el-menu-item :index="'/files'" route="/files">
             <template #default>
               <el-icon><Folder /></el-icon>
               <span>资源管理器</span>
             </template>
           </el-menu-item>
+          <el-menu-item :index="'/settings'" route="/settings">
+            <template #default>
+              <el-icon><Setting /></el-icon>
+              <span>系统设置</span>
+            </template>
+          </el-menu-item>
+
         </el-menu>
       </el-aside>
       <el-container>

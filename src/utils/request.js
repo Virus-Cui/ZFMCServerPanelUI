@@ -7,7 +7,7 @@ const server = axios.create({
     baseURL: baseURL
 })
 
-let loading = null;
+export let loading = null;
 
 server.interceptors.request.use(config=>{
     loading = ElLoading.service({
@@ -24,5 +24,6 @@ server.interceptors.response.use(res => {
     loading.close()
     return res;
 })
+
 
 export default server;

@@ -43,24 +43,26 @@ const openContainers = () => {
   selection.value
 }
 
+const formdata = ref({})
+
 
 </script>
 
 <template>
   <div class="container-box">
     <div class="topbtn">
-      <el-button type="primary" plain>新建实例</el-button>
+      <el-button type="primary" plain @click="open=true">新建实例</el-button>
       <el-button type="primary" plain :disabled="disable" @click="openContainers">开启实例</el-button>
       <el-button type="danger" plain :disabled="disable" @click="delContainer">删除实例</el-button>
     </div>
     <div class="table">
-      <el-table :data="pageData.pageData" height="730" @selectionChange="handleSelectionChange">
+      <el-table :data="pageData.pageData" height="65vh" @selectionChange="handleSelectionChange">
         <el-table-column type="selection" width="55"/>
-        <el-table-column prop="containerId" label="实例ID"></el-table-column>
+        <el-table-column prop="containerId" label="实例ID" show-overflow-tooltip></el-table-column>
         <el-table-column prop="containerName" label="实例名称"></el-table-column>
-        <el-table-column prop="workdir" label="工作目录"></el-table-column>
-        <el-table-column prop="cmd" label="启动命令"></el-table-column>
-        <el-table-column prop="stopCmd" label="停止命令"></el-table-column>
+        <el-table-column prop="workdir" label="工作目录" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="cmd" label="启动命令" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="stopCmd" label="停止命令" show-overflow-tooltip></el-table-column>
         <el-table-column prop="pid" label="PID"></el-table-column>
         <el-table-column prop="status" label="状态">
           <template #default="scope">
@@ -75,7 +77,7 @@ const openContainers = () => {
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作">
+        <el-table-column label="操作" width="300">
           <template #header>
             <el-input size="small" v-model="containerName" @blur="search(1)" @keydown.enter="search(1)"
                       placeholder="请输入实例名称(按下Enter搜索)"></el-input>
@@ -96,14 +98,48 @@ const openContainers = () => {
     <div class="newContainerDialog">
       <el-dialog
           v-model="open"
-          title="Tips"
+          title="新建实例"
           width="30%"
       >
+        <template #default>
+          <el-form>
+            <el-form-item>
+              <el-radio-group v-model="formdata.model" size="large">
+                <el-radio-button label="上传单个文件"/>
+                <el-radio-button label="上传压缩包"/>
+                <el-radio-button label="文件已存在"/>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item label="上传文件" v-if="formdata.model !== '文件已存在'">
+              <el-upload
+                  ref="upload"
+                  class="upload-demo"
+                  action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
+                  :limit="1"
+                  :auto-upload="false"
+              >
+                <template #trigger>
+                  <el-button plain type="primary">选择文件</el-button>
+                </template>
+                <el-button plain style="margin-left: 1rem" type="success" @click="">
+                  上传
+                </el-button>
+              </el-upload>
+            </el-form-item>
+            <el-form-item label="文件目录" v-if="formdata.model === '文件已存在'">
+              <el-input placeholder="请输入实例文件目录"></el-input>
+            </el-form-item>
+            <el-form-item label="启动命令">
+              <el-input v-model="formdata.cmd" placeholder="请输入启动命令"></el-input>
+            </el-form-item>
+
+          </el-form>
+        </template>
         <template #footer>
       <span class="dialog-footer">
-        <el-button @click="">取消</el-button>
-        <el-button type="primary" @click="">
-          确定
+        <el-button @click="" plain>取消</el-button>
+        <el-button type="primary" @click="" plain>
+          创建
         </el-button>
       </span>
         </template>
