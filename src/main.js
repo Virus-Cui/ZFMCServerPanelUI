@@ -9,7 +9,7 @@ import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 const app = createApp(App)
 
-NProgress.configure({ showSpinner: false })
+NProgress.configure({ showSpinner: true })
 
 router.beforeEach((to, from, next) => {
     NProgress.start();

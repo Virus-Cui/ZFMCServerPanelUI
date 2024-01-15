@@ -109,10 +109,27 @@ const navigateToIndex = ()=>{
 .el-main {
   background-color: #1f2020;
   color: #FFF;
+  position: relative;
+  //background: url("@/assets/bg.jpeg") no-repeat center;
+  //background-size: cover;
 }
 
 .el-menu {
   background-color: transparent;
   border: none;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #acbdc9;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 1);
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 10px;
+  background-color: #ebeef5;
 }
 </style>

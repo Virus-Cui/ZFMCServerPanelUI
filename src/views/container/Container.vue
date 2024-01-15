@@ -43,7 +43,9 @@ const openContainers = () => {
   selection.value
 }
 
-const formdata = ref({})
+const formdata = ref({
+  model: '上传单个服务端文件'
+})
 
 
 </script>
@@ -105,12 +107,28 @@ const formdata = ref({})
           <el-form>
             <el-form-item>
               <el-radio-group v-model="formdata.model" size="large">
-                <el-radio-button label="上传单个文件"/>
+                <el-radio-button label="上传单个服务端文件"/>
                 <el-radio-button label="上传压缩包"/>
                 <el-radio-button label="文件已存在"/>
               </el-radio-group>
             </el-form-item>
-            <el-form-item label="上传文件" v-if="formdata.model !== '文件已存在'">
+            <el-form-item label="上传文件(.jar/.exe)" v-if="formdata.model === '上传单个服务端文件'">
+              <el-upload
+                  ref="upload"
+                  class="upload-demo"
+                  action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
+                  :limit="1"
+                  :auto-upload="false"
+              >
+                <template #trigger>
+                  <el-button plain type="primary">选择文件</el-button>
+                </template>
+                <el-button plain style="margin-left: 1rem" type="success" @click="">
+                  上传
+                </el-button>
+              </el-upload>
+            </el-form-item>
+            <el-form-item label="上传文件(.zip/.rar)" v-if="formdata.model === '上传压缩包'">
               <el-upload
                   ref="upload"
                   class="upload-demo"
