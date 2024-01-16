@@ -2,7 +2,7 @@
 import {ref, onMounted, watch} from 'vue'
 import {useRoute, useRouter} from "vue-router";
 import axios from "axios";
-import {Folder, HomeFilled, Location, Menu, Promotion, Setting} from "@element-plus/icons-vue";
+import {Expand, Fold, Folder, HomeFilled, Location, Menu, Promotion, Setting} from "@element-plus/icons-vue";
 
 const router = useRouter();
 const navigateToIndex = ()=>{
@@ -11,19 +11,28 @@ const navigateToIndex = ()=>{
   })
 }
 
+const collapse = ref(false)
+const collapseMenu = ()=>{
+  collapse.value = true
+}
+
+const uncollapseMenu = ()=>{
+  collapse.value = false
+}
 
 </script>
 
 <template>
   <div class="common-layout">
     <el-container>
-      <el-aside width="200px">
+      <el-aside width="auto">
         <el-menu
             active-text-color="#409eff"
             background-color="#1f2020"
             text-color="#fff"
             router
             :default-active="router.currentRoute.value.fullPath"
+            :collapse="collapse"
         >
           <el-menu-item @click="navigateToIndex">
             <template #default>
@@ -65,9 +74,15 @@ const navigateToIndex = ()=>{
           </el-menu-item>
 
         </el-menu>
+
       </el-aside>
       <el-container>
-        <el-header></el-header>
+        <el-header>
+          <div class="icon">
+            <el-icon @click="collapseMenu" v-if="!collapse"><Fold /></el-icon>
+            <el-icon @click="uncollapseMenu" v-if="collapse"><Expand /></el-icon>
+          </div>
+        </el-header>
         <el-main>
           <router-view/>
         </el-main>
@@ -119,17 +134,13 @@ const navigateToIndex = ()=>{
   border: none;
 }
 
-::-webkit-scrollbar-thumb {
-  background-color: #acbdc9;
+.icon{
+  width: 10rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  font-size: 1.8rem;
 }
 
-::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 1);
-}
 
-::-webkit-scrollbar {
-  width: 5px;
-  height: 10px;
-  background-color: #ebeef5;
-}
 </style>

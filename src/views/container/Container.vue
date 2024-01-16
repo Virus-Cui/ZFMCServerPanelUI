@@ -9,6 +9,7 @@ const containerName = ref("")
 const style = ref(false)
 const selection = ref([])
 const disable = ref(true)
+const uploadRef = ref()
 
 const jump = () => {
   router.push({
@@ -46,6 +47,17 @@ const openContainers = () => {
 const formdata = ref({
   model: '上传单个服务端文件'
 })
+
+const upload = ()=>{
+  uploadRef.value.submit();
+}
+
+const submit = ()=>{
+  // 生成实例
+
+  // 上传文件
+  uploadRef.value.submit()
+}
 
 
 </script>
@@ -112,51 +124,49 @@ const formdata = ref({
                 <el-radio-button label="文件已存在"/>
               </el-radio-group>
             </el-form-item>
+            <el-form-item label="实例名称">
+              <el-input v-model="formdata.containerName" placeholder="请输入实例名称"></el-input>
+            </el-form-item>
+            <el-form-item label="启动命令">
+              <el-input v-model="formdata.cmd" placeholder="请输入启动命令"></el-input>
+            </el-form-item>
             <el-form-item label="上传文件(.jar/.exe)" v-if="formdata.model === '上传单个服务端文件'">
               <el-upload
-                  ref="upload"
+                  ref="uploadRef"
                   class="upload-demo"
-                  action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
+                  action="http://127.0.0.1:5200/container/uploadFile/1"
                   :limit="1"
                   :auto-upload="false"
               >
                 <template #trigger>
                   <el-button plain type="primary">选择文件</el-button>
                 </template>
-                <el-button plain style="margin-left: 1rem" type="success" @click="">
-                  上传
-                </el-button>
               </el-upload>
             </el-form-item>
             <el-form-item label="上传文件(.zip/.rar)" v-if="formdata.model === '上传压缩包'">
               <el-upload
-                  ref="upload"
+                  ref="uploadRef"
                   class="upload-demo"
-                  action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
+                  action="http://127.0.0.1:5200/container/uploadFile/2"
                   :limit="1"
                   :auto-upload="false"
               >
                 <template #trigger>
                   <el-button plain type="primary">选择文件</el-button>
                 </template>
-                <el-button plain style="margin-left: 1rem" type="success" @click="">
-                  上传
-                </el-button>
               </el-upload>
             </el-form-item>
             <el-form-item label="文件目录" v-if="formdata.model === '文件已存在'">
               <el-input placeholder="请输入实例文件目录"></el-input>
             </el-form-item>
-            <el-form-item label="启动命令">
-              <el-input v-model="formdata.cmd" placeholder="请输入启动命令"></el-input>
-            </el-form-item>
+
 
           </el-form>
         </template>
         <template #footer>
       <span class="dialog-footer">
         <el-button @click="" plain>取消</el-button>
-        <el-button type="primary" @click="" plain>
+        <el-button type="primary" @click="submit" plain>
           创建
         </el-button>
       </span>
