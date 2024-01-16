@@ -2,6 +2,7 @@
 import {useRouter} from "vue-router";
 import {ref, onMounted} from 'vue'
 import {getAll} from "@/utils/container.js";
+import {ElNotification} from "element-plus";
 
 const router = useRouter();
 const open = ref()
@@ -10,13 +11,17 @@ const style = ref(false)
 const selection = ref([])
 const disable = ref(true)
 const uploadRef = ref()
-
-const jump = () => {
-  router.push({
-    path: "/container/1745813134574202880"
-  })
-}
+const rules = ref({
+  containerName: [
+    {required: true, message: '实例名称不能为空', trigger: 'blur'},
+  ],
+  cmd: [
+    {required: true, message: '启动命令不能为空', trigger: 'blur'},
+  ]
+})
 const pageData = ref({})
+
+const ruleFormRef = ref()
 
 onMounted(() => {
   search(1)
@@ -48,11 +53,20 @@ const formdata = ref({
   model: '上传单个服务端文件'
 })
 
-const upload = ()=>{
+const upload = () => {
   uploadRef.value.submit();
 }
 
-const submit = ()=>{
+const submit = () => {
+  // 表单验证
+  ruleFormRef.value.validate((valid, fields) => {
+    if (valid) {
+      ElNotification.success({
+        message: '成功'
+      })
+    } else {
+    }
+  })
   // 生成实例
 
   // 上传文件
@@ -116,7 +130,7 @@ const submit = ()=>{
           width="30%"
       >
         <template #default>
-          <el-form>
+          <el-form :model="formdata" :rules="rules" status-icon ref="ruleFormRef">
             <el-form-item>
               <el-radio-group v-model="formdata.model" size="large">
                 <el-radio-button label="上传单个服务端文件"/>
@@ -124,10 +138,10 @@ const submit = ()=>{
                 <el-radio-button label="文件已存在"/>
               </el-radio-group>
             </el-form-item>
-            <el-form-item label="实例名称">
+            <el-form-item label="实例名称" prop="containerName">
               <el-input v-model="formdata.containerName" placeholder="请输入实例名称"></el-input>
             </el-form-item>
-            <el-form-item label="启动命令">
+            <el-form-item label="启动命令" prop="cmd">
               <el-input v-model="formdata.cmd" placeholder="请输入启动命令"></el-input>
             </el-form-item>
             <el-form-item label="上传文件(.jar/.exe)" v-if="formdata.model === '上传单个服务端文件'">
@@ -150,6 +164,7 @@ const submit = ()=>{
                   action="http://127.0.0.1:5200/container/uploadFile/2"
                   :limit="1"
                   :auto-upload="false"
+                  accept=".zip,.rar,.7z,.tar,.gz"
               >
                 <template #trigger>
                   <el-button plain type="primary">选择文件</el-button>
