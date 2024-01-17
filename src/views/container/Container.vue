@@ -1,7 +1,7 @@
 <script setup>
 import {useRouter} from "vue-router";
 import {ref, onMounted} from 'vue'
-import {getAll} from "@/utils/container.js";
+import {getAll, createContainer} from "@/utils/container.js";
 import {ElNotification} from "element-plus";
 
 const router = useRouter();
@@ -13,12 +13,17 @@ const disable = ref(true)
 const uploadRef = ref()
 const rules = ref({
   containerName: [
-    {required: true, message: '实例名称不能为空', trigger: 'blur'},
+    {required: true, message: '实例名称不能为空', trigger: 'change'},
   ],
   cmd: [
-    {required: true, message: '启动命令不能为空', trigger: 'blur'},
+    {required: true, message: '启动命令不能为空', trigger: 'change'},
+  ],
+  stopCmd: [
+    {required: true, message: '停止命令不能为空', trigger: 'change'}
   ]
 })
+
+const containerId = ref()
 const pageData = ref({})
 
 const ruleFormRef = ref()
@@ -68,9 +73,14 @@ const submit = () => {
     }
   })
   // 生成实例
-
-  // 上传文件
-  uploadRef.value.submit()
+  createContainer(formdata.value).then(resp => {
+    console.log(resp)
+    containerId.value = resp.data.data.containerId
+    search(1);
+    // 上传文件
+    console.log(containerId.value)
+    uploadRef.value.submit()
+  })
 }
 
 
@@ -144,11 +154,14 @@ const submit = () => {
             <el-form-item label="启动命令" prop="cmd">
               <el-input v-model="formdata.cmd" placeholder="请输入启动命令"></el-input>
             </el-form-item>
+            <el-form-item label="终止命令" prop="stopCmd">
+              <el-input v-model="formdata.stopCmd" placeholder="请输入终止命令"></el-input>
+            </el-form-item>
             <el-form-item label="上传文件(.jar/.exe)" v-if="formdata.model === '上传单个服务端文件'">
               <el-upload
                   ref="uploadRef"
                   class="upload-demo"
-                  action="http://127.0.0.1:5200/container/uploadFile/1"
+                  :action="`http://127.0.0.1:5200/container/uploadFile/1/${containerId}`"
                   :limit="1"
                   :auto-upload="false"
               >
@@ -161,6 +174,7 @@ const submit = () => {
               <el-upload
                   ref="uploadRef"
                   class="upload-demo"
+                  headers=""
                   action="http://127.0.0.1:5200/container/uploadFile/2"
                   :limit="1"
                   :auto-upload="false"
@@ -174,8 +188,6 @@ const submit = () => {
             <el-form-item label="文件目录" v-if="formdata.model === '文件已存在'">
               <el-input placeholder="请输入实例文件目录"></el-input>
             </el-form-item>
-
-
           </el-form>
         </template>
         <template #footer>
