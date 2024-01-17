@@ -188,6 +188,9 @@ const submit = () => {
             <el-form-item label="文件目录" v-if="formdata.model === '文件已存在'">
               <el-input placeholder="请输入实例文件目录"></el-input>
             </el-form-item>
+            <el-form-item label="配置项">
+              <el-checkbox label="自动启动" v-model="formdata.autoStart"></el-checkbox>
+            </el-form-item>
           </el-form>
         </template>
         <template #footer>
