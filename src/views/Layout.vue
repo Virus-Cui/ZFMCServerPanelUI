@@ -18,7 +18,10 @@ const collapseMenu = ()=>{
 
 const uncollapseMenu = ()=>{
   collapse.value = false
+  document.screen = true
 }
+
+
 
 </script>
 
@@ -86,7 +89,7 @@ const uncollapseMenu = ()=>{
         <el-main>
           <router-view/>
         </el-main>
-        <el-footer>Powered By ZFCloud</el-footer>
+        <el-footer>Powered By ZFCloud | Copyright © 2024 mrcsh.com | 陇ICP备2023002619号</el-footer>
       </el-container>
     </el-container>
   </div>

@@ -2,7 +2,8 @@
 import {useRouter} from "vue-router";
 import {ref, onMounted} from 'vue'
 import {getAll, createContainer} from "@/utils/container.js";
-import {ElNotification} from "element-plus";
+import {ElMessage, ElNotification} from "element-plus";
+import XUploader from "@/components/XUploader.vue";
 
 const router = useRouter();
 const open = ref()
@@ -10,7 +11,7 @@ const containerName = ref("")
 const style = ref(false)
 const selection = ref([])
 const disable = ref(true)
-const uploadRef = ref()
+
 const rules = ref({
   containerName: [
     {required: true, message: '实例名称不能为空', trigger: 'change'},
@@ -22,11 +23,22 @@ const rules = ref({
     {required: true, message: '停止命令不能为空', trigger: 'change'}
   ]
 })
-
+// 上传文件
+// 新实例目录位置
+const newContainerPath = ref()
+// 实例ID
 const containerId = ref()
+// 进度条
+const percent = ref(0)
+// 是否显示进度条
+const enableProgres = ref(false)
 const pageData = ref({})
 
 const ruleFormRef = ref()
+const uploaderRef = ref()
+const rowStyle = () => {
+  return "height: 60px"
+}
 
 onMounted(() => {
   search(1)
@@ -76,14 +88,27 @@ const submit = () => {
   createContainer(formdata.value).then(resp => {
     console.log(resp)
     containerId.value = resp.data.data.containerId
+    newContainerPath.value = resp.data.data.workdir
     search(1);
+
+    console.log(newContainerPath.value)
     // 上传文件
-    console.log(containerId.value)
-    uploadRef.value.submit()
+    if (uploaderRef.value.checkFile()) {
+      enableProgres.value = true
+      uploaderRef.value.submit()
+      enableProgres.value = false
+    }else {
+      ElMessage.warning({
+        message: '请选择文件'
+      })
+    }
+
   })
 }
 
-
+const percentLis = (per) => {
+  percent.value = per;
+}
 </script>
 
 <template>
@@ -94,7 +119,7 @@ const submit = () => {
       <el-button type="danger" plain :disabled="disable" @click="delContainer">删除实例</el-button>
     </div>
     <div class="table">
-      <el-table :data="pageData.pageData" height="65vh" @selectionChange="handleSelectionChange">
+      <el-table :data="pageData.pageData" height="65vh" @selectionChange="handleSelectionChange" :row-style="rowStyle">
         <el-table-column type="selection" width="55"/>
         <el-table-column prop="containerId" label="实例ID" show-overflow-tooltip></el-table-column>
         <el-table-column prop="containerName" label="实例名称"></el-table-column>
@@ -138,6 +163,7 @@ const submit = () => {
           v-model="open"
           title="新建实例"
           width="30%"
+          draggable
       >
         <template #default>
           <el-form :model="formdata" :rules="rules" status-icon ref="ruleFormRef">
@@ -158,17 +184,13 @@ const submit = () => {
               <el-input v-model="formdata.stopCmd" placeholder="请输入终止命令"></el-input>
             </el-form-item>
             <el-form-item label="上传文件(.jar/.exe)" v-if="formdata.model === '上传单个服务端文件'">
-              <el-upload
-                  ref="uploadRef"
-                  class="upload-demo"
-                  :action="`http://127.0.0.1:5200/container/uploadFile/1/${containerId}`"
-                  :limit="1"
-                  :auto-upload="false"
-              >
+              <XUploader ref="uploaderRef" :path="newContainerPath" :percent-event="percentLis" :auto-upload="false"
+                         :file-types="['jar','exe']" :container-id="containerId"
+             >
                 <template #trigger>
-                  <el-button plain type="primary">选择文件</el-button>
+                  <el-button id="button" type="primary" plain>选择文件</el-button>
                 </template>
-              </el-upload>
+              </XUploader>
             </el-form-item>
             <el-form-item label="上传文件(.zip/.rar)" v-if="formdata.model === '上传压缩包'">
               <el-upload
@@ -186,12 +208,13 @@ const submit = () => {
               </el-upload>
             </el-form-item>
             <el-form-item label="文件目录" v-if="formdata.model === '文件已存在'">
-              <el-input placeholder="请输入实例文件目录"></el-input>
+              <el-input v-model="formdata.workdir" placeholder="请输入实例文件目录"></el-input>
             </el-form-item>
             <el-form-item label="配置项">
               <el-checkbox label="自动启动" v-model="formdata.autoStart"></el-checkbox>
             </el-form-item>
           </el-form>
+          <el-progress v-show="enableProgres" :percentage="percent"></el-progress>
         </template>
         <template #footer>
       <span class="dialog-footer">
@@ -214,5 +237,9 @@ const submit = () => {
 .page {
   display: flex;
   justify-content: right;
+}
+
+::v-deep .el-dialog {
+  min-width: 500px;
 }
 </style>
