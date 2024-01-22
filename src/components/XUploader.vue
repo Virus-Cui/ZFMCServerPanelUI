@@ -9,6 +9,7 @@ const uploader = ref()
 const percent = ref(0)
 
 const status = ref(false)
+const fileName = ref("")
 
 
 const checkMirrorFile = (file) => {
@@ -21,11 +22,12 @@ const checkMirrorFile = (file) => {
 }
 
 const uploadFileSilce = (files, index) => {
-
   const {name} = files
   const {size} = files;
   const shardSize = 1024 * 1024 * 50;
   const shardTotal = Math.ceil(size / shardSize)
+
+  fileName.value = name;
 
   if (index >= shardTotal) {
     props.percentEvent(100)
@@ -99,7 +101,11 @@ const checkFile = () => {
   return status;
 }
 
-defineExpose({submit,checkFile})
+const getFileName = () => {
+  return fileName;
+}
+
+defineExpose({submit, checkFile, getFileName})
 
 </script>
 

@@ -9,3 +9,13 @@ export const uploadFun = (containerId, data) => {
         })
     })
 }
+
+export const unzip = (data)=>{
+    return new Promise((resolve, reject)=>{
+        server.post(`/file/unzip`,data).then(resp=>{
+            resolve(resp)
+        }).catch(err=>{
+            reject(err)
+        })
+    })
+}

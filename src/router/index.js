@@ -29,7 +29,7 @@ const router = createRouter({
           name: 'CINFO',
           component: ()=>import("@/views/container/CINFO.vue"),
           meta: {
-            title: '实例详情'
+            title: '实例详情',
           }
         },
         {
@@ -57,6 +57,14 @@ const router = createRouter({
           }
         }
       ]
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: ()=>import("@/views/auth/login.vue"),
+      meta: {
+        title: '登录'
+      }
     }
   ]
 })

@@ -87,7 +87,8 @@ const uncollapseMenu = ()=>{
           </div>
         </el-header>
         <el-main>
-          <router-view/>
+
+          <router-view />
         </el-main>
         <el-footer>Powered By ZFCloud | Copyright © 2024 mrcsh.com | 陇ICP备2023002619号</el-footer>
       </el-container>

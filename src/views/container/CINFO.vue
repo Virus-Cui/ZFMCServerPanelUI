@@ -119,7 +119,6 @@ const send = () => {
           <div class="text">
 
           </div>
-
             <div class="btns">
               <el-button ref="btn1" style="width: 100%;margin-bottom: .5rem;" type="primary" plain @click="start">开启实例
               </el-button>
@@ -158,12 +157,6 @@ const send = () => {
         </div>
       </el-col>
     </el-row>
-
-<!--    <el-tour v-model="open">-->
-<!--      <el-tour-step :target="btn1?.$el" title="Upload File">-->
-<!--        <div>Put you files here.</div>-->
-<!--      </el-tour-step>-->
-<!--    </el-tour>-->
   </div>
 
 

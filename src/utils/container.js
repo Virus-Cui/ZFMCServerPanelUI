@@ -28,3 +28,13 @@ export const createContainer = (obj) => {
         })
     })
 }
+
+export const delContainer = (id) => {
+    return new Promise((resolve, reject) => {
+        server.get(`/container/del/${id}`).then(resp=>{
+            resolve(resp)
+        }).catch(err=>{
+            reject(err)
+        })
+    })
+}

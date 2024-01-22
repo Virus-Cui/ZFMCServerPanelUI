@@ -1,9 +1,10 @@
 <script setup>
 import {useRouter} from "vue-router";
 import {ref, onMounted} from 'vue'
-import {getAll, createContainer} from "@/utils/container.js";
-import {ElMessage, ElNotification} from "element-plus";
+import {getAll, createContainer, delContainer} from "@/utils/container.js";
+import {ElMessage, ElMessageBox, ElNotification} from "element-plus";
 import XUploader from "@/components/XUploader.vue";
+import {unzip} from "@/utils/upload.js";
 
 const router = useRouter();
 const open = ref()
@@ -14,13 +15,13 @@ const disable = ref(true)
 
 const rules = ref({
   containerName: [
-    {required: true, message: '实例名称不能为空', trigger: 'change'},
+    {required: true, message: '实例名称不能为空', trigger: 'blur'},
   ],
   cmd: [
-    {required: true, message: '启动命令不能为空', trigger: 'change'},
+    {required: true, message: '启动命令不能为空', trigger: 'blur'},
   ],
   stopCmd: [
-    {required: true, message: '停止命令不能为空', trigger: 'change'}
+    {required: true, message: '停止命令不能为空', trigger: 'blur'}
   ]
 })
 // 上传文件
@@ -47,7 +48,6 @@ onMounted(() => {
 const search = (page) => {
   getAll(page, containerName.value).then(res => {
     pageData.value = res.data.data
-    console.log(pageData)
   })
 }
 
@@ -89,26 +89,59 @@ const submit = () => {
     console.log(resp)
     containerId.value = resp.data.data.containerId
     newContainerPath.value = resp.data.data.workdir
-    search(1);
 
     console.log(newContainerPath.value)
     // 上传文件
     if (uploaderRef.value.checkFile()) {
       enableProgres.value = true
       uploaderRef.value.submit()
-      enableProgres.value = false
     }else {
       ElMessage.warning({
         message: '请选择文件'
       })
     }
 
+    search(1);
+
   })
 }
 
 const percentLis = (per) => {
   percent.value = per;
+  if(per === 100){
+    // 解压文件
+    if(formdata.value.model == '上传压缩包'){
+      let fileName = uploaderRef.value.getFileName();
+      console.log(fileName)
+      let formData = new FormData();
+      formData.append("fileName",fileName.value)
+      formData.append("containerId", containerId.value)
+      unzip(formData)
+    }
+    enableProgres.value = false
+    open.value = false
+    formdata.value = {}
+    formdata.value.model = '上传单个服务端文件'
+    percent.value = 0
+  }
 }
+
+const delContainerFun = (id)=>{
+  ElMessageBox.confirm('此操作将会永久删除实例<br/>注意：不会删除实例数据','警告',{
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+    dangerouslyUseHTMLString: true
+  }).then(()=>{
+    delContainer(id).then(resp=>{
+      search(1)
+    })
+  }).catch(()=>{
+
+  })
+
+}
+
 </script>
 
 <template>
@@ -147,7 +180,7 @@ const percentLis = (per) => {
           </template>
           <template #default="scope">
             <el-button type="warning" plain size="small">修改</el-button>
-            <el-button type="danger" plain size="small">删除</el-button>
+            <el-button type="danger" plain size="small" @click="delContainerFun(scope.row.containerId)">删除</el-button>
             <el-button type="primary" plain size="small" @click="naviToControl(scope.row.containerId)">控制面板
             </el-button>
           </template>
@@ -193,19 +226,13 @@ const percentLis = (per) => {
               </XUploader>
             </el-form-item>
             <el-form-item label="上传文件(.zip/.rar)" v-if="formdata.model === '上传压缩包'">
-              <el-upload
-                  ref="uploadRef"
-                  class="upload-demo"
-                  headers=""
-                  action="http://127.0.0.1:5200/container/uploadFile/2"
-                  :limit="1"
-                  :auto-upload="false"
-                  accept=".zip,.rar,.7z,.tar,.gz"
+              <XUploader ref="uploaderRef" :path="newContainerPath" :percent-event="percentLis" :auto-upload="false"
+                         :file-types="['zip','tar','gz','7z','rar']" :container-id="containerId"
               >
                 <template #trigger>
-                  <el-button plain type="primary">选择文件</el-button>
+                  <el-button id="button" type="primary" plain>选择文件</el-button>
                 </template>
-              </el-upload>
+              </XUploader>
             </el-form-item>
             <el-form-item label="文件目录" v-if="formdata.model === '文件已存在'">
               <el-input v-model="formdata.workdir" placeholder="请输入实例文件目录"></el-input>
