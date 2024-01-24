@@ -1,8 +1,10 @@
 <script setup>
-import {ref, onMounted, onUnmounted} from 'vue'
+import {ref, onMounted, onUnmounted, nextTick} from 'vue'
 import {useRoute} from "vue-router";
 import axios from "axios";
 import {ElMessage} from "element-plus";
+import {wsURL} from "@/utils/request.js";
+import {sendCommand, startContainer, stopContainer, getOne} from "@/utils/container.js";
 
 const msg = ref([])
 const cmd = ref()
@@ -13,6 +15,13 @@ const wss = ref()
 const commands = ref(['stop', 'gamemode 1'])
 const open = ref(false)
 const btn1 = ref()
+const containerInfo = ref({})
+
+const btnStatus = ref({
+  start: true,
+  restart: true,
+  stop: true
+})
 
 const startKeepAlive = () => {
   interval.value = setInterval(() => {
@@ -31,11 +40,14 @@ const onWebSocketMessage = (event) => {
       ElMessage.warning({
         message: data.data
       })
+      nextTick(() => {
+        updateContainerStatus()
+
+      })
       break;
   }
   setTimeout(() => {
     let doc = document.getElementById("cmd")
-    console.log(doc.scrollHeight)
     doc.scrollTop = doc.scrollHeight
   }, 50)
 
@@ -47,12 +59,11 @@ const onOpen = () => {
 }
 
 const onClose = () => {
-  console.log("关闭连接")
   clearInterval(interval.value)
   loading.value = true
   // 重连
   setTimeout(() => {
-    wss.value = new WebSocket("ws://127.0.0.1:5200/log/" + containerId.value)
+    wss.value = new WebSocket(wsURL() + "log/" + containerId.value)
     wss.value.onmessage = onWebSocketMessage
     wss.value.onclose = onClose
     wss.value.onopen = onOpen
@@ -60,36 +71,53 @@ const onClose = () => {
 
 }
 
+const updateContainerStatus = () => {
+  getOne(containerId.value).then(resp => {
+    containerInfo.value = resp.data.data
+    console.log(containerInfo.value)
+    if (containerInfo.value.status === 'RUNNING' || containerInfo.value.status === 'STARTING') {
+      btnStatus.value.start = true
+      btnStatus.value.stop = false
+      btnStatus.value.restart = false
+    } else if (containerInfo.value.status === 'STOP' || containerInfo.value.status === 'STOPING') {
+      btnStatus.value.start = false
+      btnStatus.value.stop = true
+      btnStatus.value.restart = true
+    }
+  })
+}
+
 onMounted(() => {
+
   containerId.value = useRoute().params.id
-  console.log(containerId.value)
-  wss.value = new WebSocket("ws://127.0.0.1:5200/log/" + containerId.value)
+  wss.value = new WebSocket(wsURL() + "log/" + containerId.value)
   wss.value.onmessage = onWebSocketMessage
   wss.value.onclose = onClose
   wss.value.onopen = onOpen
   commands.value = localStorage.getItem("commands")
   open.value = true
+  updateContainerStatus()
 })
 
 onUnmounted(() => {
   wss.value.close()
-  console.log("测试销毁")
 })
 
 
 const stop = () => {
-  msg.value.push(">" + "stop")
-  axios.post("http://127.0.0.1:5200/container/cmd/" + containerId.value, {
-    cmd: "stop"
-  }).then(resp => {
-    ElMessage.error({
-      message: '停止成功'
+  btnStatus.value.stop = true
+  btnStatus.value.restart = true
+  stopContainer(containerId.value).then(resp => {
+    ElMessage.success({
+      message: '关闭成功'
     })
   })
 }
 
 const start = () => {
-  axios.get("http://127.0.0.1:5200/container/start/" + containerId.value).then(resp => {
+  btnStatus.value.start = true
+  startContainer(containerId.value).then(resp => {
+    updateContainerStatus()
     ElMessage.success({
       message: '开启成功'
     })
@@ -98,9 +126,8 @@ const start = () => {
 
 const send = () => {
   msg.value.push(">" + cmd.value)
-  axios.post("http://127.0.0.1:5200/container/cmd/" + containerId.value, {
-    cmd: cmd.value
-  }).then(resp => {
+
+  sendCommand(containerId.value, cmd.value).then(resp => {
     ElMessage.closeAll("success")
     ElMessage.success({
       message: `发送指令${cmd.value}成功`
@@ -117,21 +144,28 @@ const send = () => {
       <el-col :xs="24" :sm="24" :md="7" :lg="5" :xl="5">
         <div class="left">
           <div class="text">
-
+            <ul>
+              <li>实例名称 {{ containerInfo.containerName }}</li>
+              <li>实例状态 {{ containerInfo.status }}</li>
+              <li>实例工作目录 {{ containerInfo.workdir }}</li>
+            </ul>
           </div>
-            <div class="btns">
-              <el-button ref="btn1" style="width: 100%;margin-bottom: .5rem;" type="primary" plain @click="start">开启实例
-              </el-button>
-              <br>
-              <el-button ref="btn2" style="width: 100%;margin-bottom: .5rem;" type="warning" plain @click="start">重新启动
-              </el-button>
-              <br>
-              <el-button ref="btn3" style="width: 100%;margin-bottom: .5rem;" type="danger" plain @click="stop">
-                停止实例
-              </el-button>
-              <br>
-              <el-button ref="btn4" style="width: 100%;margin-bottom: .5rem;" plain @click="start">文件列表</el-button>
-            </div>
+          <div class="btns">
+            <el-button ref="btn1" :disabled="btnStatus.start" style="width: 100%;margin-bottom: .5rem;" type="primary"
+                       plain @click="start">开启实例
+            </el-button>
+            <br>
+            <el-button ref="btn2" :disabled="btnStatus.restart" style="width: 100%;margin-bottom: .5rem;" type="warning"
+                       plain @click="start">重新启动
+            </el-button>
+            <br>
+            <el-button ref="btn3" :disabled="btnStatus.stop" style="width: 100%;margin-bottom: .5rem;" type="danger"
+                       plain @click="stop">
+              停止实例
+            </el-button>
+            <br>
+            <el-button ref="btn4" style="width: 100%;margin-bottom: .5rem;" plain @click="start">文件列表</el-button>
+          </div>
           <div class="text" style="height: 340px">
 
           </div>
@@ -141,7 +175,8 @@ const send = () => {
         <div v-loading="loading">
           <div class="cmdview-container">
             <div class="cmdview" id="cmd">
-              <div class="line" v-for="item in msg" :class="item.includes('INFO]')?'info': item.includes('WARN]')?'warning':'error'" v-html="item"></div>
+              <div class="line" v-for="item in msg"
+                   :class="item.includes('INFO]')?'info': item.includes('WARN]')?'warning':'error'" v-html="item"></div>
             </div>
           </div>
           <el-form-item style="margin-top: 1rem;">
@@ -149,7 +184,7 @@ const send = () => {
                       placeholder="命令（按下enter键发送）"></el-input>
           </el-form-item>
           <el-form-item>
-            <el-tag v-if="commands.length === 0">空</el-tag>
+            <!--            <el-tag v-if="commands.length === 0">空</el-tag>-->
             <el-tag style="margin-right: .2rem;cursor: pointer;user-select: none" v-for="item in commands"
                     @click="cmd = item; send()">{{ item }}
             </el-tag>
@@ -212,18 +247,20 @@ const send = () => {
   border-radius: 8px;
   padding: 1rem;
 }
-.info{
+
+.info {
   color: green;
 }
 
-.warning{
+.warning {
   color: #e6a23c;
 }
 
-.error{
+.error {
   color: red;
 }
-.nomal{
+
+.nomal {
 
 }
 </style>

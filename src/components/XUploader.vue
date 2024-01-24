@@ -3,14 +3,14 @@ import {nextTick, ref} from 'vue'
 import {ElMessage} from "element-plus";
 import {uploadFun} from "@/utils/upload.js";
 
-const props = defineProps(["path", "containerId", "fileTypes", "percentEvent", "autoUpload"])
+const props = defineProps(["path", "containerId", "fileTypes", "percentEvent", "autoUpload","uploadSuccessEvent"])
 
 const uploader = ref()
 const percent = ref(0)
 
 const status = ref(false)
 const fileName = ref("")
-
+const chunkSize = ref(20)
 
 const checkMirrorFile = (file) => {
   const fileType = file.file.name.split('.')
@@ -24,7 +24,7 @@ const checkMirrorFile = (file) => {
 const uploadFileSilce = (files, index) => {
   const {name} = files
   const {size} = files;
-  const shardSize = 1024 * 1024 * 50;
+  const shardSize = 1024 * 1024 * chunkSize.value;
   const shardTotal = Math.ceil(size / shardSize)
 
   fileName.value = name;
@@ -48,12 +48,15 @@ const uploadFileSilce = (files, index) => {
 
   if (index < shardTotal) {
     props.percentEvent(Number((index / shardTotal) * 100).toFixed(0) * 1)
+
     console.log("上传")
     // 调用
     uploadFun(props.containerId, formData).then(resp => {
       index++;
       uploadFileSilce(files, index)
     })
+  }else {
+    props.uploadSuccessEvent()
   }
 
 }
@@ -121,6 +124,7 @@ defineExpose({submit, checkFile, getFileName})
       :on-exceed="exceed"
       :on-remove="remove"
   >
+    <el-input type="number" style="width: 5rem;margin-left: 1rem" v-model="chunkSize"></el-input>
     <template #trigger>
       <slot id="uploader" name="trigger"/>
     </template>

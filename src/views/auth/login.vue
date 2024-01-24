@@ -13,6 +13,13 @@ const rules = {
   ]
 }
 
+const doLogin = ()=>{
+  login(formdata.value).then(resp=>{
+    console.log(resp)
+  })
+  console.log(formdata.value)
+}
+
 
 
 </script>
@@ -36,6 +43,9 @@ const rules = {
             <el-checkbox>
               记住我
             </el-checkbox>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" style="width: 100%" @click="doLogin">登录 </el-button>
           </el-form-item>
         </el-form>
       </div>

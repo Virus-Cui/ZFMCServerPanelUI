@@ -31,7 +31,60 @@ export const createContainer = (obj) => {
 
 export const delContainer = (id) => {
     return new Promise((resolve, reject) => {
-        server.get(`/container/del/${id}`).then(resp=>{
+        server.get(`/container/del/${id}`).then(resp => {
+            resolve(resp)
+        }).catch(err => {
+            reject(err)
+        })
+    })
+}
+
+export const sendCommand = (containerId, cmd) => {
+    return new Promise((resolve, reject) => {
+        server.post(`/container/cmd/${containerId}`, {
+            cmd: cmd
+        }).then(resp => {
+            resolve(resp)
+        }).catch(err => {
+            reject(err)
+        })
+    })
+}
+
+export const startContainer = (containerId) => {
+    return new Promise((resolve, reject) => {
+        server.get(`/container/start/${containerId}`).then(resp=>{
+            resolve(resp)
+        }).catch(err=>{
+            reject(err)
+        })
+    })
+}
+
+export const stopContainer = (containerId)=>{
+    return new Promise((resolve, reject) => {
+        server.get(`/container/stop/${containerId}`).then(resp=>{
+            resolve(resp)
+        }).catch(err=>{
+            reject(err)
+        })
+    })
+}
+
+export const getOne = (id)=>{
+    return new Promise((resolve, reject) => {
+        server.get(`/container/one/${id}`).then(resp=>{
+            resolve(resp)
+        }).catch(err=>{
+            reject(err)
+        })
+    })
+}
+
+export const deleteBatch = (ids)=>{
+    return new Promise((resolve, reject) => {
+
+        server.post("/container/delBatch",ids).then(resp=>{
             resolve(resp)
         }).catch(err=>{
             reject(err)

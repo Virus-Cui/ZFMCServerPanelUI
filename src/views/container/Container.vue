@@ -1,7 +1,7 @@
 <script setup>
 import {useRouter} from "vue-router";
 import {ref, onMounted} from 'vue'
-import {getAll, createContainer, delContainer} from "@/utils/container.js";
+import {getAll, createContainer, delContainer, deleteBatch} from "@/utils/container.js";
 import {ElMessage, ElMessageBox, ElNotification} from "element-plus";
 import XUploader from "@/components/XUploader.vue";
 import {unzip} from "@/utils/upload.js";
@@ -12,6 +12,8 @@ const containerName = ref("")
 const style = ref(false)
 const selection = ref([])
 const disable = ref(true)
+const btnStatus = ref(false)
+
 
 const rules = ref({
   containerName: [
@@ -75,6 +77,7 @@ const upload = () => {
 }
 
 const submit = () => {
+
   // 表单验证
   ruleFormRef.value.validate((valid, fields) => {
     if (valid) {
@@ -84,6 +87,7 @@ const submit = () => {
     } else {
     }
   })
+  btnStatus.value = true
   // 生成实例
   createContainer(formdata.value).then(resp => {
     console.log(resp)
@@ -95,51 +99,82 @@ const submit = () => {
     if (uploaderRef.value.checkFile()) {
       enableProgres.value = true
       uploaderRef.value.submit()
-    }else {
+    } else {
       ElMessage.warning({
         message: '请选择文件'
       })
     }
 
-    search(1);
 
   })
 }
 
 const percentLis = (per) => {
   percent.value = per;
-  if(per === 100){
+  console.log(per)
+  if (per === 100) {
     // 解压文件
-    if(formdata.value.model == '上传压缩包'){
+    if (formdata.value.model == '上传压缩包') {
       let fileName = uploaderRef.value.getFileName();
       console.log(fileName)
       let formData = new FormData();
-      formData.append("fileName",fileName.value)
+      formData.append("fileName", fileName.value)
       formData.append("containerId", containerId.value)
       unzip(formData)
     }
+
+  }
+}
+
+const delContainerFun = (id) => {
+  ElMessageBox.confirm('此操作将会永久删除实例<br/>注意：不会删除实例数据', '警告', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+    dangerouslyUseHTMLString: true
+  }).then(() => {
+    delContainer(id).then(resp => {
+      search(1)
+    })
+  }).catch(() => {
+
+  })
+
+}
+
+const uploadSuccess = () => {
+  percent.value = 100
+  setTimeout(() => {
     enableProgres.value = false
     open.value = false
     formdata.value = {}
     formdata.value.model = '上传单个服务端文件'
     percent.value = 0
-  }
+    btnStatus.value = false
+    search(1);
+  }, 1000)
 }
 
-const delContainerFun = (id)=>{
-  ElMessageBox.confirm('此操作将会永久删除实例<br/>注意：不会删除实例数据','警告',{
+const deleteBatchFun = () => {
+  let ids = []
+  for (let i = 0; i < selection.value.length; i++) {
+    ids.push(selection.value[i].containerId)
+  }
+
+  // console.log(ids)
+
+  ElMessageBox.confirm('此操作将会永久删除实例<br/>注意：不会删除实例数据', '警告', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning',
     dangerouslyUseHTMLString: true
-  }).then(()=>{
-    delContainer(id).then(resp=>{
+  }).then(() => {
+    deleteBatch(ids).then(resp => {
       search(1)
     })
-  }).catch(()=>{
+  }).catch(() => {
 
   })
-
 }
 
 </script>
@@ -149,7 +184,7 @@ const delContainerFun = (id)=>{
     <div class="topbtn">
       <el-button type="primary" plain @click="open=true">新建实例</el-button>
       <el-button type="primary" plain :disabled="disable" @click="openContainers">开启实例</el-button>
-      <el-button type="danger" plain :disabled="disable" @click="delContainer">删除实例</el-button>
+      <el-button type="danger" plain :disabled="disable" @click="deleteBatchFun">删除实例</el-button>
     </div>
     <div class="table">
       <el-table :data="pageData.pageData" height="65vh" @selectionChange="handleSelectionChange" :row-style="rowStyle">
@@ -170,6 +205,9 @@ const delContainerFun = (id)=>{
             </el-tag>
             <el-tag v-if="scope.row.status === 'STOP'" type="danger">
               停止
+            </el-tag>
+            <el-tag v-if="scope.row.status === 'STOPING'" type="warning">
+              正在停止
             </el-tag>
           </template>
         </el-table-column>
@@ -219,7 +257,8 @@ const delContainerFun = (id)=>{
             <el-form-item label="上传文件(.jar/.exe)" v-if="formdata.model === '上传单个服务端文件'">
               <XUploader ref="uploaderRef" :path="newContainerPath" :percent-event="percentLis" :auto-upload="false"
                          :file-types="['jar','exe']" :container-id="containerId"
-             >
+                         :upload-success-event="uploadSuccess"
+              >
                 <template #trigger>
                   <el-button id="button" type="primary" plain>选择文件</el-button>
                 </template>
@@ -228,6 +267,7 @@ const delContainerFun = (id)=>{
             <el-form-item label="上传文件(.zip/.rar)" v-if="formdata.model === '上传压缩包'">
               <XUploader ref="uploaderRef" :path="newContainerPath" :percent-event="percentLis" :auto-upload="false"
                          :file-types="['zip','tar','gz','7z','rar']" :container-id="containerId"
+                         :upload-success-event="uploadSuccess"
               >
                 <template #trigger>
                   <el-button id="button" type="primary" plain>选择文件</el-button>
@@ -245,8 +285,8 @@ const delContainerFun = (id)=>{
         </template>
         <template #footer>
       <span class="dialog-footer">
-        <el-button @click="" plain>取消</el-button>
-        <el-button type="primary" @click="submit" plain>
+        <el-button :disabled="btnStatus" @click="" plain>取消</el-button>
+        <el-button :disabled="btnStatus" type="primary" @click="submit" plain>
           创建
         </el-button>
       </span>
