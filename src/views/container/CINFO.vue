@@ -36,13 +36,8 @@ const onWebSocketMessage = (event) => {
       msg.value.push(data.data)
       break;
     case 2:
-      ElMessage.closeAll()
-      ElMessage.warning({
-        message: data.data
-      })
       nextTick(() => {
         updateContainerStatus()
-
       })
       break;
   }
@@ -144,10 +139,22 @@ const send = () => {
       <el-col :xs="24" :sm="24" :md="7" :lg="5" :xl="5">
         <div class="left">
           <div class="text">
+            <div class="tag">基础信息</div>
             <ul>
-              <li>实例名称 {{ containerInfo.containerName }}</li>
-              <li>实例状态 {{ containerInfo.status }}</li>
-              <li>实例工作目录 {{ containerInfo.workdir }}</li>
+              <li>实例名称：<el-tag>{{ containerInfo.containerName }}</el-tag></li>
+              <li>实例状态：<el-tag v-if="containerInfo.status === 'RUNNING'" type="success">
+                  正在运行
+                </el-tag>
+                <el-tag v-if="containerInfo.status === 'STARTING'" type="warning">
+                  正在启动
+                </el-tag>
+                <el-tag v-if="containerInfo.status === 'STOP'" type="danger">
+                  停止
+                </el-tag>
+                <el-tag v-if="containerInfo.status === 'STOPING'" type="warning">
+                  正在停止
+                </el-tag>
+              </li>
             </ul>
           </div>
           <div class="btns">
@@ -156,7 +163,7 @@ const send = () => {
             </el-button>
             <br>
             <el-button ref="btn2" :disabled="btnStatus.restart" style="width: 100%;margin-bottom: .5rem;" type="warning"
-                       plain @click="start">重新启动
+                       plain @click="">重新启动
             </el-button>
             <br>
             <el-button ref="btn3" :disabled="btnStatus.stop" style="width: 100%;margin-bottom: .5rem;" type="danger"
@@ -164,7 +171,7 @@ const send = () => {
               停止实例
             </el-button>
             <br>
-            <el-button ref="btn4" style="width: 100%;margin-bottom: .5rem;" plain @click="start">文件列表</el-button>
+            <el-button ref="btn4" style="width: 100%;margin-bottom: .5rem;" plain @click="">文件列表</el-button>
           </div>
           <div class="text" style="height: 340px">
 
@@ -174,6 +181,8 @@ const send = () => {
       <el-col :xs="24" :sm="24" :md="17" :lg="19" :xl="19">
         <div v-loading="loading">
           <div class="cmdview-container">
+            <div class="tag">控制台</div>
+
             <div class="cmdview" id="cmd">
               <div class="line" v-for="item in msg"
                    :class="item.includes('INFO]')?'info': item.includes('WARN]')?'warning':'error'" v-html="item"></div>
@@ -233,13 +242,21 @@ const send = () => {
 
 .text {
   width: 100%;
-  height: 200px;
+  //height: 200px;
   margin-bottom: .5rem;
   border-radius: 4px;
   border: 1px solid #4c4d4f;
   box-shadow: 0 0 10px rgba(28 27 27 / 1);
   background: #1c1b1b;
   //backdrop-filter: blur(8px);
+  padding: .4rem;
+  ul{
+    li{
+      list-style: none;
+      font-size: .8rem;
+      margin-bottom: 0.2rem;
+    }
+  }
 }
 
 .cmdview-container {
@@ -262,5 +279,23 @@ const send = () => {
 
 .nomal {
 
+}
+
+.tag{
+  position: relative;
+  text-indent: 0.5em;
+  display: flex;
+  align-items: center;
+  line-height: 140%;
+  margin-bottom: .6rem;
+  &::after{
+    content: '';
+    position: absolute;
+    width: 5px;
+    height: 100%;
+    background: #5eadff;
+    left: 0;
+    border-radius: 16px;
+  }
 }
 </style>

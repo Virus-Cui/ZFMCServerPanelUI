@@ -1,7 +1,15 @@
 <script setup>
 import {useRouter} from "vue-router";
 import {ref, onMounted} from 'vue'
-import {getAll, createContainer, delContainer, deleteBatch} from "@/utils/container.js";
+import {
+  getAll,
+  createContainer,
+  delContainer,
+  deleteBatch,
+  updateContainer,
+  startBatch,
+  stopBatch
+} from "@/utils/container.js";
 import {ElMessage, ElMessageBox, ElNotification} from "element-plus";
 import XUploader from "@/components/XUploader.vue";
 import {unzip} from "@/utils/upload.js";
@@ -13,6 +21,7 @@ const style = ref(false)
 const selection = ref([])
 const disable = ref(true)
 const btnStatus = ref(false)
+const modul = ref(0)
 
 
 const rules = ref({
@@ -77,36 +86,34 @@ const upload = () => {
 }
 
 const submit = () => {
-
   // 表单验证
   ruleFormRef.value.validate((valid, fields) => {
     if (valid) {
       ElNotification.success({
         message: '成功'
       })
-    } else {
-    }
-  })
-  btnStatus.value = true
-  // 生成实例
-  createContainer(formdata.value).then(resp => {
-    console.log(resp)
-    containerId.value = resp.data.data.containerId
-    newContainerPath.value = resp.data.data.workdir
 
-    console.log(newContainerPath.value)
-    // 上传文件
-    if (uploaderRef.value.checkFile()) {
-      enableProgres.value = true
-      uploaderRef.value.submit()
-    } else {
-      ElMessage.warning({
-        message: '请选择文件'
+      btnStatus.value = true
+      // 生成实例
+      createContainer(formdata.value).then(resp => {
+        console.log(resp)
+        containerId.value = resp.data.data.containerId
+        newContainerPath.value = resp.data.data.workdir
+        console.log(newContainerPath.value)
+        // 上传文件
+        if (uploaderRef.value.checkFile()) {
+          enableProgres.value = true
+          uploaderRef.value.submit()
+        } else {
+          ElMessage.warning({
+            message: '请选择文件'
+          })
+        }
       })
+    } else {
     }
-
-
   })
+
 }
 
 const percentLis = (per) => {
@@ -177,14 +184,54 @@ const deleteBatchFun = () => {
   })
 }
 
+const openUpdate = (data) => {
+  modul.value = 1;
+  open.value = true
+  formdata.value = data
+}
+
+const closeDialog = () => {
+  modul.value = 0;
+  open.value = false
+  formdata.value = {}
+}
+
+const update = () => {
+  updateContainer(formdata.value).then(resp => {
+    console.log(resp)
+    modul.value = 0
+    open.value = false
+    search(1)
+  }).catch(err => {
+
+  })
+}
+
+const startBatchFun = () => {
+  let ids = []
+  for (let i = 0; i < selection.value.length; i++) {
+    ids.push(selection.value[i].containerId)
+  }
+  startBatch(ids)
+}
+
+const stopBatchFun = ()=>{
+  let ids = []
+  for (let i = 0; i < selection.value.length; i++) {
+    ids.push(selection.value[i].containerId)
+  }
+  stopBatch(ids)
+}
+
 </script>
 
 <template>
   <div class="container-box">
     <div class="topbtn">
       <el-button type="primary" plain @click="open=true">新建实例</el-button>
-      <el-button type="primary" plain :disabled="disable" @click="openContainers">开启实例</el-button>
       <el-button type="danger" plain :disabled="disable" @click="deleteBatchFun">删除实例</el-button>
+      <el-button type="primary" plain :disabled="disable" @click="startBatchFun">开启实例</el-button>
+      <el-button type="danger" plain :disabled="disable" @click="stopBatchFun">关闭实例</el-button>
     </div>
     <div class="table">
       <el-table :data="pageData.pageData" height="65vh" @selectionChange="handleSelectionChange" :row-style="rowStyle">
@@ -217,7 +264,7 @@ const deleteBatchFun = () => {
                       placeholder="请输入实例名称(按下Enter搜索)"></el-input>
           </template>
           <template #default="scope">
-            <el-button type="warning" plain size="small">修改</el-button>
+            <el-button type="warning" plain size="small" @click="openUpdate(scope.row)">修改</el-button>
             <el-button type="danger" plain size="small" @click="delContainerFun(scope.row.containerId)">删除</el-button>
             <el-button type="primary" plain size="small" @click="naviToControl(scope.row.containerId)">控制面板
             </el-button>
@@ -235,10 +282,14 @@ const deleteBatchFun = () => {
           title="新建实例"
           width="30%"
           draggable
+          @close="closeDialog"
       >
         <template #default>
-          <el-form :model="formdata" :rules="rules" status-icon ref="ruleFormRef">
-            <el-form-item>
+          <el-form label-width="80px" :model="formdata" :rules="rules" status-icon ref="ruleFormRef">
+            <el-form-item v-if="modul !== 0" label="实例ID">
+              <el-input disabled v-model="formdata.containerId"></el-input>
+            </el-form-item>
+            <el-form-item label="模式" v-if="modul === 0">
               <el-radio-group v-model="formdata.model" size="large">
                 <el-radio-button label="上传单个服务端文件"/>
                 <el-radio-button label="上传压缩包"/>
@@ -254,7 +305,7 @@ const deleteBatchFun = () => {
             <el-form-item label="终止命令" prop="stopCmd">
               <el-input v-model="formdata.stopCmd" placeholder="请输入终止命令"></el-input>
             </el-form-item>
-            <el-form-item label="上传文件(.jar/.exe)" v-if="formdata.model === '上传单个服务端文件'">
+            <el-form-item label="上传文件(.jar/.exe)" v-if="formdata.model === '上传单个服务端文件' && modul === 0">
               <XUploader ref="uploaderRef" :path="newContainerPath" :percent-event="percentLis" :auto-upload="false"
                          :file-types="['jar','exe']" :container-id="containerId"
                          :upload-success-event="uploadSuccess"
@@ -264,7 +315,7 @@ const deleteBatchFun = () => {
                 </template>
               </XUploader>
             </el-form-item>
-            <el-form-item label="上传文件(.zip/.rar)" v-if="formdata.model === '上传压缩包'">
+            <el-form-item label="上传文件(.zip/.rar)" v-if="formdata.model === '上传压缩包' && modul === 0">
               <XUploader ref="uploaderRef" :path="newContainerPath" :percent-event="percentLis" :auto-upload="false"
                          :file-types="['zip','tar','gz','7z','rar']" :container-id="containerId"
                          :upload-success-event="uploadSuccess"
@@ -277,7 +328,7 @@ const deleteBatchFun = () => {
             <el-form-item label="文件目录" v-if="formdata.model === '文件已存在'">
               <el-input v-model="formdata.workdir" placeholder="请输入实例文件目录"></el-input>
             </el-form-item>
-            <el-form-item label="配置项">
+            <el-form-item label="配置项" v-if="modul === 0">
               <el-checkbox label="自动启动" v-model="formdata.autoStart"></el-checkbox>
             </el-form-item>
           </el-form>
@@ -285,9 +336,12 @@ const deleteBatchFun = () => {
         </template>
         <template #footer>
       <span class="dialog-footer">
-        <el-button :disabled="btnStatus" @click="" plain>取消</el-button>
-        <el-button :disabled="btnStatus" type="primary" @click="submit" plain>
+        <el-button :disabled="btnStatus" @click="closeDialog" plain>取消</el-button>
+        <el-button :disabled="btnStatus" type="primary" @click="submit" plain v-if="modul === 0">
           创建
+        </el-button>
+        <el-button :disabled="btnStatus" type="primary" @click="update" plain v-else>
+          修改
         </el-button>
       </span>
         </template>
@@ -307,6 +361,6 @@ const deleteBatchFun = () => {
 }
 
 ::v-deep .el-dialog {
-  min-width: 500px;
+  min-width: 600px;
 }
 </style>

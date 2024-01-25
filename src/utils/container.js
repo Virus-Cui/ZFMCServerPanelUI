@@ -53,41 +53,67 @@ export const sendCommand = (containerId, cmd) => {
 
 export const startContainer = (containerId) => {
     return new Promise((resolve, reject) => {
-        server.get(`/container/start/${containerId}`).then(resp=>{
+        server.get(`/container/start/${containerId}`).then(resp => {
             resolve(resp)
-        }).catch(err=>{
+        }).catch(err => {
             reject(err)
         })
     })
 }
 
-export const stopContainer = (containerId)=>{
+export const stopContainer = (containerId) => {
     return new Promise((resolve, reject) => {
-        server.get(`/container/stop/${containerId}`).then(resp=>{
+        server.get(`/container/stop/${containerId}`).then(resp => {
             resolve(resp)
-        }).catch(err=>{
+        }).catch(err => {
             reject(err)
         })
     })
 }
 
-export const getOne = (id)=>{
+export const getOne = (id) => {
     return new Promise((resolve, reject) => {
-        server.get(`/container/one/${id}`).then(resp=>{
+        server.get(`/container/one/${id}`).then(resp => {
             resolve(resp)
-        }).catch(err=>{
+        }).catch(err => {
             reject(err)
         })
     })
 }
 
-export const deleteBatch = (ids)=>{
+export const deleteBatch = (ids) => {
     return new Promise((resolve, reject) => {
 
-        server.post("/container/delBatch",ids).then(resp=>{
+        server.post("/container/delBatch", ids).then(resp => {
             resolve(resp)
-        }).catch(err=>{
+        }).catch(err => {
             reject(err)
         })
+    })
+}
+
+export const updateContainer = (formdata) => {
+    return new Promise((resolve, reject) => {
+        server.post("/container/update", formdata).then(resp => {
+            resolve(resp)
+        }).catch(err => {
+            reject(err)
+        })
+    })
+}
+
+export const startBatch = (ids) => {
+    return new Promise((resolve, reject) => {
+        server.post("/container/startBatch", ids).then(resp => {
+            resolve(resp)
+        }).catch(err => {
+            reject(err)
+        })
+    })
+}
+
+export const stopBatch = (ids) => {
+    return new Promise((resolve, reject) => {
+        server.post("/container/stopBatch", ids).then(resp => resolve(resp)).catch(err => reject(err))
     })
 }
