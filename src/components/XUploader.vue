@@ -49,7 +49,6 @@ const uploadFileSilce = (files, index) => {
   if (index < shardTotal) {
     props.percentEvent(Number((index / shardTotal) * 100).toFixed(0) * 1)
 
-    console.log("上传")
     // 调用
     uploadFun(props.containerId, formData).then(resp => {
       index++;
@@ -65,14 +64,12 @@ const upload = (file) => {
   if (checkMirrorFile(file)) {
     const files = file.file
     const shardIndex = 0;
-    console.log("upload")
     uploadFileSilce(files, shardIndex);
   }
 }
 
 
 const submit = () => {
-  console.log("发送")
   uploader.value.submit()
 }
 

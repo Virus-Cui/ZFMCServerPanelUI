@@ -96,10 +96,8 @@ const submit = () => {
       btnStatus.value = true
       // 生成实例
       createContainer(formdata.value).then(resp => {
-        console.log(resp)
         containerId.value = resp.data.data.containerId
         newContainerPath.value = resp.data.data.workdir
-        console.log(newContainerPath.value)
         // 上传文件
         if (uploaderRef.value.checkFile()) {
           enableProgres.value = true
@@ -111,6 +109,7 @@ const submit = () => {
         }
       })
     } else {
+
     }
   })
 
@@ -118,12 +117,10 @@ const submit = () => {
 
 const percentLis = (per) => {
   percent.value = per;
-  console.log(per)
   if (per === 100) {
     // 解压文件
     if (formdata.value.model == '上传压缩包') {
       let fileName = uploaderRef.value.getFileName();
-      console.log(fileName)
       let formData = new FormData();
       formData.append("fileName", fileName.value)
       formData.append("containerId", containerId.value)
@@ -194,11 +191,11 @@ const closeDialog = () => {
   modul.value = 0;
   open.value = false
   formdata.value = {}
+  formdata.value.model = '上传单个服务端文件'
 }
 
 const update = () => {
   updateContainer(formdata.value).then(resp => {
-    console.log(resp)
     modul.value = 0
     open.value = false
     search(1)

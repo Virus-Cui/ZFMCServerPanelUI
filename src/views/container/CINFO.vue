@@ -69,7 +69,6 @@ const onClose = () => {
 const updateContainerStatus = () => {
   getOne(containerId.value).then(resp => {
     containerInfo.value = resp.data.data
-    console.log(containerInfo.value)
     if (containerInfo.value.status === 'RUNNING' || containerInfo.value.status === 'STARTING') {
       btnStatus.value.start = true
       btnStatus.value.stop = false

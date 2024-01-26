@@ -15,9 +15,8 @@ const rules = {
 
 const doLogin = ()=>{
   login(formdata.value).then(resp=>{
-    console.log(resp)
+
   })
-  console.log(formdata.value)
 }
 
 

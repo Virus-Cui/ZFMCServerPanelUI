@@ -14,11 +14,11 @@ const server = axios.create({
 export let loading = null;
 
 server.interceptors.request.use(config=>{
-    // loading = ElLoading.service({
-    //     lock: true,
-    //     text: '正在加载',
-    //     background: 'rgba(0, 0, 0, 0.7)'
-    // })
+    loading = ElLoading.service({
+        lock: true,
+        text: '正在加载',
+        background: 'rgba(0, 0, 0, 0.7)'
+    })
     config.headers["Authorization"] = localStorage.getItem("token");
 
     return config;
@@ -26,12 +26,13 @@ server.interceptors.request.use(config=>{
 
 server.interceptors.response.use(res => {
     let code = res.data.code
+    console.log(code)
     if(code === 5001){
         router.push({
             path: `/login?redirect=${window.location}`
         })
     }
-    // loading.close()
+    loading.close()
     return res;
 })
 
