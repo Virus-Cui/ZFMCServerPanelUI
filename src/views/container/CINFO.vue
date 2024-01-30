@@ -31,6 +31,7 @@ const startKeepAlive = () => {
 
 const onWebSocketMessage = (event) => {
   let data = JSON.parse(event.data);
+  console.log(data.type)
   switch (data.type) {
     case 0:
       msg.value.push(data.data)
@@ -63,7 +64,6 @@ const onClose = () => {
     wss.value.onclose = onClose
     wss.value.onopen = onOpen
   }, 1000)
-
 }
 
 const updateContainerStatus = () => {

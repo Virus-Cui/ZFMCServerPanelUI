@@ -1,8 +1,9 @@
 <script setup>
-import {ref, onMounted} from 'vue'
+import {ref, onMounted, onUnmounted} from 'vue'
 import {getAPISpir} from "@/utils/index.js";
 import XCharts from "@/components/XCharts.vue";
 import MonacoEditor from 'monaco-editor-vue3'
+import {wsURL} from "@/utils/request.js";
 
 
 const data = ref([])
@@ -10,9 +11,13 @@ const xaxis = ref([])
 const legend = ref([])
 const chartRef = ref()
 
-onMounted(() => {
+// websocket
+const wss = ref()
+const interval = ref()
+const loading = ref()
+
+const initSip = () => {
   getAPISpir().then(resp => {
-    console.log(resp)
     data.value = resp.data.data.data
     xaxis.value = resp.data.data.xaxis
     legend.value = resp.data.data.types
@@ -20,6 +25,46 @@ onMounted(() => {
       chartRef.value.initChart()
     }, 100)
   })
+}
+
+const startKeepAlive = () => {
+  interval.value = setInterval(() => {
+    wss.value.send("keepalive")
+  }, 1000)
+}
+
+
+const onOpen = () => {
+  loading.value = false
+  startKeepAlive()
+  initSip()
+}
+
+const onMessage = (event) => {
+  console.log(event)
+}
+
+const onClose = () => {
+  clearInterval(interval.value)
+  loading.value = true
+  // 重连
+  setTimeout(() => {
+    wss.value = new WebSocket(wsURL() + "message")
+    wss.value.onmessage = onMessage
+    wss.value.onclose = onClose
+    wss.value.onopen = onOpen
+  }, 1000)
+}
+
+onMounted(() => {
+  wss.value = new WebSocket(wsURL() + "message")
+  wss.value.onmessage = onMessage
+  wss.value.onopen = onOpen
+  wss.value.onclose = onClose
+})
+
+onUnmounted(() => {
+  wss.value.close()
 })
 
 
@@ -56,26 +101,26 @@ const options = {
 const open = ref(false)
 const editorOpen = ref(false)
 
-const openFun = ()=>{
+const openFun = () => {
   open.value = true
-  setTimeout(()=>{
+  setTimeout(() => {
     editorOpen.value = true
-  },100)
+  }, 100)
 }
 
 const type = ref("java")
-const closeFun = ()=>{
+const closeFun = () => {
   editorOpen.value = false
 }
 
 </script>
 
 <template>
-  <XCharts :title="'接口监控'" ref="chartRef" :data="data" :xaxis="xaxis" :legend="legend" :id="'aaa'" :width="'800px'"
+  <XCharts v-loading="loading" :title="'接口监控'" ref="chartRef" :data="data" :xaxis="xaxis" :legend="legend" :id="'aaa'" :width="'800px'"
            :height="'400px'" :dark-mode="true"></XCharts>
   <el-button @click="openFun">open</el-button>
   <el-dialog
-  v-model="open" @open="openFun" title="修改文件" @close="closeFun">
+      v-model="open" @open="openFun" title="修改文件" @close="closeFun">
     <template #default>
       <el-form inline>
         <el-form-item label="语言">

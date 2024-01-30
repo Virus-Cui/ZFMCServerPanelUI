@@ -90,7 +90,7 @@ const uncollapseMenu = ()=>{
 
           <router-view />
         </el-main>
-        <el-footer>Powered By ZFCloud | Copyright © 2024 mrcsh.com | 陇ICP备2023002619号</el-footer>
+        <el-footer>Powered By ZFCloud | Copyright © 2024 mrcsh.com | 津ICP备2024010807号-3</el-footer>
       </el-container>
     </el-container>
   </div>
