@@ -1,5 +1,5 @@
 <script setup>
-import {ref, onMounted, onUnmounted} from 'vue'
+import {ref, onMounted, onUnmounted, nextTick} from 'vue'
 import {getAPISpir} from "@/utils/index.js";
 import XCharts from "@/components/XCharts.vue";
 import MonacoEditor from 'monaco-editor-vue3'
@@ -17,6 +17,7 @@ const interval = ref()
 const loading = ref()
 
 const initSip = () => {
+  console.log("初始化图表")
   getAPISpir().then(resp => {
     data.value = resp.data.data.data
     xaxis.value = resp.data.data.xaxis
@@ -41,7 +42,11 @@ const onOpen = () => {
 }
 
 const onMessage = (event) => {
-  console.log(event)
+  console.log(JSON.parse(event.data).data)
+  switch (JSON.parse(event.data).data) {
+    case "UPDATE_CHART":
+      initSip()
+  }
 }
 
 const onClose = () => {
@@ -116,7 +121,8 @@ const closeFun = () => {
 </script>
 
 <template>
-  <XCharts v-loading="loading" :title="'接口监控'" ref="chartRef" :data="data" :xaxis="xaxis" :legend="legend" :id="'aaa'" :width="'800px'"
+  <XCharts v-loading="loading" :title="'接口监控'" ref="chartRef" :data="data" :xaxis="xaxis" :legend="legend"
+           :id="'aaa'" :width="'800px'"
            :height="'400px'" :dark-mode="true"></XCharts>
   <el-button @click="openFun">open</el-button>
   <el-dialog
