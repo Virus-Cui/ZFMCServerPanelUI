@@ -21,6 +21,16 @@ const uncollapseMenu = ()=>{
   document.screen = true
 }
 
+onMounted(()=>{
+  window.addEventListener("resize",()=>{
+    if(window.innerWidth <= 720){
+      collapse.value = true
+    }else {
+      collapse.value = false
+    }
+  })
+})
+
 
 
 </script>

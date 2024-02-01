@@ -3,27 +3,25 @@ import {ref, onMounted} from 'vue'
 import * as echarts from 'echarts';
 
 const props = defineProps([
-    'width',
-    'height',
-    'bk-color',
-    'darkMode',
-    'legend',
-    'xaxis',
-    'data',
-    'id',
-    'title'
+  'width',
+  'height',
+  'bk-color',
+  'darkMode',
+  'legend',
+  'xaxis',
+  'data',
+  'id',
+  'title'
 ])
 
-
-
-
-onMounted(()=>{
-
-})
-
-const initChart = ()=>{
+const initChart = () => {
   var chartDom = document.getElementById(props.id);
-  var myChart = echarts.init(chartDom,'dark');
+  var myChart = echarts.init(chartDom, 'dark');
+  window.addEventListener("resize",()=>{
+    setTimeout(()=>{
+      myChart.resize();
+    },200)
+  })
   var option;
   option = {
     backgroundColor: '',
@@ -44,7 +42,7 @@ const initChart = ()=>{
     },
     toolbox: {
       feature: {
-        saveAsImage: {}
+        // saveAsImage: {}
       }
     },
     xAxis: {
@@ -57,26 +55,22 @@ const initChart = ()=>{
     },
     series: props.data
   };
-  console.log(props["data"])
-  console.log(option)
   option && myChart.setOption(option);
 }
 
 defineExpose({initChart})
 
 
-
-
 </script>
 
 <template>
-<div class="chart" :id="props.id"></div>
+  <div class="chart" :id="props.id"></div>
 </template>
 
 <style scoped>
-.chart{
-  width: v-bind(props['width']);
-  height: v-bind(props['height']);
-  background-color: v-bind(props['bk-color']);
+.chart {
+  width: v-bind(props ['width']);
+  height: v-bind(props ['height']);
+  background-color: v-bind(props ['bk-color']);
 }
 </style>

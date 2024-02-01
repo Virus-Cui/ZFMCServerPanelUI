@@ -16,6 +16,7 @@ const commands = ref(['stop', 'gamemode 1'])
 const open = ref(false)
 const btn1 = ref()
 const containerInfo = ref({})
+const destroy = ref(false)
 
 const btnStatus = ref({
   start: true,
@@ -31,7 +32,6 @@ const startKeepAlive = () => {
 
 const onWebSocketMessage = (event) => {
   let data = JSON.parse(event.data);
-  console.log(data.type)
   switch (data.type) {
     case 0:
       msg.value.push(data.data)
@@ -59,10 +59,12 @@ const onClose = () => {
   loading.value = true
   // 重连
   setTimeout(() => {
-    wss.value = new WebSocket(wsURL() + "log/" + containerId.value)
-    wss.value.onmessage = onWebSocketMessage
-    wss.value.onclose = onClose
-    wss.value.onopen = onOpen
+    if(destroy.value === false){
+      wss.value = new WebSocket(wsURL() + "log/" + containerId.value)
+      wss.value.onmessage = onWebSocketMessage
+      wss.value.onclose = onClose
+      wss.value.onopen = onOpen
+    }
   }, 1000)
 }
 
@@ -82,7 +84,7 @@ const updateContainerStatus = () => {
 }
 
 onMounted(() => {
-
+  destroy.value = false
   containerId.value = useRoute().params.id
   wss.value = new WebSocket(wsURL() + "log/" + containerId.value)
   wss.value.onmessage = onWebSocketMessage
@@ -94,6 +96,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  destroy.value = true
   wss.value.close()
 })
 
