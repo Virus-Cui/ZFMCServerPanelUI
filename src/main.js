@@ -1,5 +1,6 @@
 import "@/assets/base.scss"
 import 'element-plus/theme-chalk/dark/css-vars.css'
+import '@/assets/iconfont/iconfont.css'
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'

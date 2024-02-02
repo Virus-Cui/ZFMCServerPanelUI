@@ -14,9 +14,12 @@ const props = defineProps([
   'title'
 ])
 
+const chart = ref()
+
 const initChart = () => {
   var chartDom = document.getElementById(props.id);
   var myChart = echarts.init(chartDom, 'dark');
+  chart.value = myChart
   window.addEventListener("resize",()=>{
     setTimeout(()=>{
       myChart.resize();
@@ -58,7 +61,43 @@ const initChart = () => {
   option && myChart.setOption(option);
 }
 
-defineExpose({initChart})
+const setOptionFun = ()=>{
+  let option = {
+    backgroundColor: '',
+    title: {
+      text: props.title
+    },
+    tooltip: {
+      trigger: 'axis'
+    },
+    legend: {
+      data: props.legend
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true
+    },
+    toolbox: {
+      feature: {
+        // saveAsImage: {}
+      }
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: props.xaxis
+    },
+    yAxis: {
+      type: 'value'
+    },
+    series: props.data
+  };
+  chart.value.setOption(option)
+}
+
+defineExpose({initChart,setOptionFun})
 
 
 </script>

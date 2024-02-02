@@ -2,7 +2,7 @@ import axios from "axios";
 import {ElLoading, ElMessage} from "element-plus";
 import router from "@/router/index.js";
 
-const env = "notdev";
+const env = "dev";
 const devBaseURL = "http://127.0.0.1:5200/";
 const devWsAddress = "ws://127.0.0.1:5200/";
 const baseURL = env === "dev" ? devBaseURL: '/';

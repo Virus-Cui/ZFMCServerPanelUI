@@ -1,0 +1,51 @@
+{
+  "id": "4430573",
+  "name": "ZFMCP",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "1381302",
+      "name": "arrowdown",
+      "font_class": "arrowdown",
+      "unicode": "e603",
+      "unicode_decimal": 58883
+    },
+    {
+      "icon_id": "1381304",
+      "name": "arrowleft",
+      "font_class": "arrowleft",
+      "unicode": "e604",
+      "unicode_decimal": 58884
+    },
+    {
+      "icon_id": "1381305",
+      "name": "arrowright",
+      "font_class": "arrowright",
+      "unicode": "e605",
+      "unicode_decimal": 58885
+    },
+    {
+      "icon_id": "1381311",
+      "name": "arrowup",
+      "font_class": "arrowup",
+      "unicode": "e606",
+      "unicode_decimal": 58886
+    },
+    {
+      "icon_id": "1381449",
+      "name": "reload",
+      "font_class": "reload",
+      "unicode": "e648",
+      "unicode_decimal": 58952
+    },
+    {
+      "icon_id": "27363885",
+      "name": "server",
+      "font_class": "server",
+      "unicode": "eb8e",
+      "unicode_decimal": 60302
+    }
+  ]
+}
