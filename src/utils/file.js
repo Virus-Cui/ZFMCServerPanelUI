@@ -25,10 +25,22 @@ export const getChildrenFile = (parent) => {
 export const getParentFile = (file) => {
     return new Promise((resolve, reject) => {
         let data = new FormData();
-        data.append("path",file)
-        server.post("/file/previousFile",data).then(resp=>{
+        data.append("path", file)
+        server.post("/file/previousFile", data).then(resp => {
             resolve(resp)
-        }).catch(err=>{
+        }).catch(err => {
+            reject(err)
+        })
+    })
+}
+
+export const readFile = (file) => {
+    return new Promise((resolve, reject) => {
+        let data = new FormData();
+        data.append("path", file)
+        server.post("/file/readFile", data).then(resp => {
+            resolve(resp)
+        }).catch(err => {
             reject(err)
         })
     })

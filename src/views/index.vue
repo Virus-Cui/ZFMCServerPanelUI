@@ -1,9 +1,10 @@
 <script setup>
 import {ref, onMounted, onUnmounted, nextTick} from 'vue'
-import {getAPISpir} from "@/utils/index.js";
+import {getAPISpir,getSysInfo} from "@/utils/index.js";
 import XCharts from "@/components/XCharts.vue";
 import MonacoEditor from 'monaco-editor-vue3'
 import {wsURL} from "@/utils/request.js";
+import axios from 'axios'
 
 
 const apis = ref({})
@@ -15,6 +16,7 @@ const chartRef1 = ref()
 const chartRef2 = ref()
 const chartRef3 = ref()
 const destroy = ref(false)
+const sysInfo = ref({})
 
 // websocket
 const wss = ref()
@@ -61,9 +63,9 @@ const onClose = () => {
   clearInterval(interval.value)
   loading.value = true
   // 重连
-  console.log("重连")
   setTimeout(() => {
     if(destroy.value === false){
+      console.log("重连")
       wss.value = new WebSocket(wsURL() + "message")
       wss.value.onmessage = onMessage
       wss.value.onclose = onClose
@@ -73,12 +75,22 @@ const onClose = () => {
 }
 
 onMounted(() => {
+  getSysInfo().then(res=>{
+    console.log(res)
+    sysInfo.value = res.data.data
+  })
   destroy.value = false
   wss.value = new WebSocket(wsURL() + "message")
   wss.value.onmessage = onMessage
   wss.value.onopen = onOpen
   wss.value.onclose = onClose
 
+  let formdata = new FormData();
+  formdata.append("fileFolder","C:/ZFMCPanel/instanceData/1752133205585764352")
+  formdata.append("fileName","frpc.ini")
+  axios.post("http://127.0.0.1:5200/file/readFile",formdata).then(resp=>{
+    code.value = resp.data.data
+  })
 
 })
 
@@ -90,29 +102,7 @@ onUnmounted(() => {
 })
 
 
-const code = ref("package cn.mrcsh.zfmcserverpanelapi.entity.vo;\n" +
-    "\n" +
-    "import lombok.Data;\n" +
-    "\n" +
-    "import java.util.Collection;\n" +
-    "import java.util.List;\n" +
-    "import java.util.Queue;\n" +
-    "\n" +
-    "@Data\n" +
-    "public class EchartsVo {\n" +
-    "\n" +
-    "    private List<String> xAxis;\n" +
-    "    private List<String> types;\n" +
-    "    private List<DataStructure> data;\n" +
-    "\n" +
-    "    @Data\n" +
-    "    public static class DataStructure {\n" +
-    "        private String name;\n" +
-    "        private String type;\n" +
-    "        private String areaStyle = \"\";\n" +
-    "        private Queue<Integer> data;\n" +
-    "    }\n" +
-    "}\n")
+const code = ref("")
 const options = {
   colorDecorators: true,
   lineHeight: 24,
@@ -135,12 +125,29 @@ const closeFun = () => {
   editorOpen.value = false
 }
 
+
 </script>
 
 <template>
   <el-row>
     <el-col :xl="24">
       <div class="tag">系统概况</div>
+    </el-col>
+  </el-row>
+  <el-row>
+    <el-col :xl="24">
+      <div class="sys-info">
+        <el-descriptions>
+          <el-descriptions-item label="系统类型">{{ sysInfo.sysType }}</el-descriptions-item>
+          <el-descriptions-item label="系统架构">{{ sysInfo.sysArch }}</el-descriptions-item>
+          <el-descriptions-item label="运行用户">{{ sysInfo.runUser }}</el-descriptions-item>
+          <el-descriptions-item label="内存总量">{{ sysInfo.memTotal }}</el-descriptions-item>
+          <el-descriptions-item label="Java运行时版本">{{ sysInfo.jdkVersion }}</el-descriptions-item>
+          <el-descriptions-item label="Java路径">{{ sysInfo.javaHome }}</el-descriptions-item>
+          <el-descriptions-item label="面板版本">{{ sysInfo.dashboardVersion }}</el-descriptions-item>
+
+        </el-descriptions>
+      </div>
     </el-col>
   </el-row>
   <el-row>
@@ -180,18 +187,30 @@ const closeFun = () => {
       <el-form inline>
         <el-form-item label="语言">
           <el-select style="width: 200px" v-model="type" placeholder="选择语言">
+            <el-option value="xml">xml</el-option>
             <el-option value="java">java</el-option>
-            <el-option value="python">python</el-option>
-            <el-option value="go">go</el-option>
+            <el-option value="txt">txt</el-option>
             <el-option value="vue">vue</el-option>
-            <el-option value="javascript">javascript</el-option>
-            <el-option value="typescript">typescript</el-option>
-            <el-option value="css">css</el-option>
-            <el-option value="jsx">jsx</el-option>
-            <el-option value="tsx">tsx</el-option>
+            <el-option value="js">js</el-option>
+            <el-option value="ts">ts</el-option>
+            <el-option value="properties">properties</el-option>
+            <el-option value="yml">yml</el-option>
             <el-option value="yaml">yaml</el-option>
             <el-option value="toml">toml</el-option>
-            <el-option value="text">text</el-option>
+            <el-option value="py">py</el-option>
+            <el-option value="cpp">cpp</el-option>
+            <el-option value="c">c</el-option>
+            <el-option value="h">h</el-option>
+            <el-option value="sh">sh</el-option>
+            <el-option value="cmd">cmd</el-option>
+            <el-option value="bat">bat</el-option>
+            <el-option value="json">json</el-option>
+            <el-option value="html">html</el-option>
+            <el-option value="css">css</el-option>
+            <el-option value="sql">sql</el-option>
+            <el-option value="config">config</el-option>
+            <el-option value="ini">ini</el-option>
+            <el-option value="log">log</el-option>
           </el-select>
         </el-form-item>
       </el-form>
@@ -225,5 +244,11 @@ const closeFun = () => {
   &:hover {
 
   }
+}
+.sys-info{
+  height: 200px;
+  border: 1px solid #484753;
+  margin-bottom: 1rem;
+  padding: 1rem;
 }
 </style>

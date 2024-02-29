@@ -2,8 +2,14 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: siyuan;
 }
 
 :root{
   --bg-color: red
+}
+
+@font-face {
+  font-family: siyuan;
+  src: url("./font/NotoSansCJK-Medium-5.otf");
 }

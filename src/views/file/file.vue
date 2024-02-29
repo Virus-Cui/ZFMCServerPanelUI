@@ -1,11 +1,24 @@
 <script setup>
 import XUploader from "@/components/XUploader.vue";
-import {getRoots, getChildrenFile, getParentFile} from "@/utils/file.js";
+import {getRoots, getChildrenFile, getParentFile, readFile} from "@/utils/file.js";
 import {ref, onMounted} from "vue";
-import {ElMessage} from "element-plus";
+import {error, success} from "@/utils/message.js";
+import MonacoEditor from "monaco-editor-vue3";
 
 const tbData = ref()
 const nowFolder = ref([])
+const open = ref(false)
+const editorOpen = ref(false)
+const options = {
+  colorDecorators: true,
+  lineHeight: 24,
+  tabSize: 2,
+  readonly: false
+}
+const filename = ref()
+
+const type = ref()
+const code = ref()
 
 onMounted(() => {
   getRoots().then(resp => {
@@ -14,26 +27,47 @@ onMounted(() => {
   })
 })
 
-const getChildrenFileFun = (row, column, event) => {
-  nowFolder.value.push(row.filePath)
-  getChildrenFile(row.filePath).then(resp => {
+const edit = (row) => {
+  filename.value = row.fileName
+  openFun()
+  readFile(row.filePath).then(resp => {
     console.log(resp.data.data)
-    tbData.value = resp.data.data
+    code.value = resp.data.data
+    editorOpen.value = true
   })
 }
 
-const getPrevious = ()=>{
-  if(nowFolder == undefined){
-    ElMessage.error({
-      message: '没有父级'
+const getChildrenFileFun = (row, column, event) => {
+  if (row.fileType == 'FOLDER') {
+    nowFolder.value.push(row.filePath)
+    getChildrenFile(row.filePath).then(resp => {
+      console.log(resp.data.data)
+      tbData.value = resp.data.data
     })
+  }else {
+    edit(row)
   }
-  getParentFile(nowFolder.value[nowFolder.value.length-1]).then(resp=>{
+}
+
+const getPrevious = () => {
+  if (nowFolder.value.length <= 0) {
+    error('没有父级')
+  }
+  getParentFile(nowFolder.value[nowFolder.value.length - 1]).then(resp => {
     tbData.value = resp.data.data
   })
   nowFolder.value.pop();
 }
 
+const openFun = () => {
+  open.value = true
+  setTimeout(() => {
+  }, 100)
+}
+
+const closeFun = () => {
+  editorOpen.value = false
+}
 
 
 </script>
@@ -73,7 +107,7 @@ const getPrevious = ()=>{
           <el-table-column label="权限" prop="filePermissions"/>
           <el-table-column label="操作">
             <template #default="scope">
-              <el-button plain size="small" type="primary">编辑</el-button>
+              <el-button plain size="small" type="primary" @click.stop="edit(scope.row)">编辑</el-button>
               <el-button plain size="small" type="success">下载</el-button>
               <el-button plain size="small" type="danger">删除</el-button>
             </template>
@@ -82,6 +116,25 @@ const getPrevious = ()=>{
       </div>
     </div>
   </div>
+
+  <el-dialog
+      v-model="open" title="修改文件" @close="closeFun">
+    <template #default>
+      <div class="filename">当前文件：{{ filename }}</div>
+      <MonacoEditor
+          v-if="editorOpen"
+          theme="auto"
+          :options="options"
+          :language="type"
+          :width="'100%'"
+          :height="500"
+          v-model:value="code"
+      ></MonacoEditor>
+    </template>
+    <template #footer>
+      <el-button type="primary" plain>保存</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <style scoped lang="scss">
@@ -121,7 +174,8 @@ const getPrevious = ()=>{
         border: 1px solid #484753;
         width: 100%;
         display: flex;
-        div{
+
+        div {
           display: flex;
         }
       }
@@ -146,5 +200,9 @@ const getPrevious = ()=>{
       //background: red;
     }
   }
+}
+
+.filename{
+  margin-bottom: 1rem;
 }
 </style>
