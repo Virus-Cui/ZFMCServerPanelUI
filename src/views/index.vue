@@ -1,6 +1,6 @@
 <script setup>
 import {ref, onMounted, onUnmounted, nextTick} from 'vue'
-import {getAPISpir} from "@/utils/index.js";
+import {getAPISpir, getServerInfo} from "@/utils/index.js";
 import XCharts from "@/components/XCharts.vue";
 import MonacoEditor from 'monaco-editor-vue3'
 import {wsURL} from "@/utils/request.js";
@@ -20,10 +20,10 @@ const destroy = ref(false)
 const wss = ref()
 const interval = ref()
 const loading = ref()
+const serverInfo = ref({})
 
 const initSip = () => {
   getAPISpir().then(resp => {
-    console.log(resp)
     apis.value = resp.data.data.apis
     cpu.value = resp.data.data.cpu
     mem.value = resp.data.data.mem
@@ -61,9 +61,8 @@ const onClose = () => {
   clearInterval(interval.value)
   loading.value = true
   // 重连
-  console.log("重连")
   setTimeout(() => {
-    if(destroy.value === false){
+    if (destroy.value === false) {
       wss.value = new WebSocket(wsURL() + "message")
       wss.value.onmessage = onMessage
       wss.value.onclose = onClose
@@ -78,14 +77,14 @@ onMounted(() => {
   wss.value.onmessage = onMessage
   wss.value.onopen = onOpen
   wss.value.onclose = onClose
-
-
+  getServerInfo().then(resp=>{
+    serverInfo.value = resp.data.data
+  })
 })
 
 onUnmounted(() => {
   destroy.value = true
   clearInterval(interval.value)
-  console.log("关闭ws")
   wss.value.close()
 })
 
@@ -145,31 +144,47 @@ const closeFun = () => {
   </el-row>
   <el-row>
     <el-col :xl="24">
+      <el-descriptions>
+        <el-descriptions-item label="系统类型">{{serverInfo.sysType}}</el-descriptions-item>
+        <el-descriptions-item label="系统架构">{{serverInfo.sysArch}}</el-descriptions-item>
+        <el-descriptions-item label="运行用户">{{serverInfo.runUser}}</el-descriptions-item>
+        <el-descriptions-item label="内存总量">{{serverInfo.memTotal}}</el-descriptions-item>
+        <el-descriptions-item label="Java运行时版本">{{serverInfo.javaVersion}}</el-descriptions-item>
+        <el-descriptions-item label="Java路径">{{serverInfo.javaHome}}</el-descriptions-item>
+        <el-descriptions-item label="面板版本">{{serverInfo.dashboardVersion}}</el-descriptions-item>
+      </el-descriptions>
+    </el-col>
+  </el-row>
+  <el-row>
+    <el-col :xl="24">
       <div class="tag">系统监控</div>
     </el-col>
   </el-row>
   <el-row justify="center" align="center">
     <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
-      <XCharts v-loading="loading" :title="'接口监控'" ref="chartRef" :data="apis.data" :xaxis="apis.xaxis" :legend="apis.legend"
+      <XCharts v-loading="loading" :title="'接口监控'" ref="chartRef" :data="apis.data" :xaxis="apis.xaxis"
+               :legend="apis.legend"
                :id="'aaa'" :width="'100%'"
-               :height="'200px'" :dark-mode="true"></XCharts>
+               :height="'300px'" :dark-mode="true"></XCharts>
     </el-col>
     <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
-      <XCharts v-loading="loading" :title="'在线实例'" ref="chartRef3" :data="container.data" :xaxis="container.xaxis" :legend="container.legend"
+      <XCharts v-loading="loading" :title="'在线实例'" ref="chartRef3" :data="container.data" :xaxis="container.xaxis"
+               :legend="container.legend"
                :id="'ddd'" :width="'100%'"
-               :height="'200px'" :dark-mode="true"></XCharts>
+               :height="'300px'" :dark-mode="true"></XCharts>
     </el-col>
     <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
-      <XCharts v-loading="loading" :title="'CPU占用率'" ref="chartRef1" :data="cpu.data" :xaxis="cpu.xaxis" :legend="cpu.legend"
+      <XCharts v-loading="loading" :title="'CPU占用率'" ref="chartRef1" :data="cpu.data" :xaxis="cpu.xaxis"
+               :legend="cpu.legend"
                :id="'bbb'" :width="'100%'"
-               :height="'200px'" :dark-mode="true"></XCharts>
+               :height="'300px'" :dark-mode="true"></XCharts>
     </el-col>
     <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
-      <XCharts v-loading="loading" :title="'内存占用率'" ref="chartRef2" :data="mem.data" :xaxis="mem.xaxis" :legend="mem.legend"
+      <XCharts v-loading="loading" :title="'内存占用率'" ref="chartRef2" :data="mem.data" :xaxis="mem.xaxis"
+               :legend="mem.legend"
                :id="'ccc'" :width="'100%'"
-               :height="'200px'" :dark-mode="true"></XCharts>
+               :height="'300px'" :dark-mode="true"></XCharts>
     </el-col>
-
   </el-row>
 
 
@@ -202,6 +217,7 @@ const closeFun = () => {
           :language="type"
           :width="'100%'"
           :height="500"
+          :theme="'dark'"
           v-model:value="code"
       ></MonacoEditor>
     </template>
@@ -211,17 +227,19 @@ const closeFun = () => {
 </template>
 
 <style scoped lang="scss">
-.tag{
+.tag {
   width: 100%;
   height: 2.5rem;
   //background: red;
   border-radius: 8px;
-  background: #272828;
+  background: var(--bg-color);
+  color: var(--text-color);
   display: flex;
   align-items: center;
   text-indent: 1em;
   margin-bottom: 1rem;
-  border: 1px solid #484753;
+  border: 1px solid var(--border-color);
+
   &:hover {
 
   }

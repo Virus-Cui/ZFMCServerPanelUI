@@ -1,9 +1,23 @@
-*{
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-:root{
-  --bg-color: red
+:root {
+  --bg-color: #fafafa;
+  --text-color: #1d1d1f;
+  --border-color: #99999c;
+  --console-background: #eeeeee;
+  --txt-color: #000;
+  --x-box-shadow: 0 0 10px rgba(153 153 156 / 1);
+}
+
+html[class *= "dark"] {
+  --bg-color: #1c1b1b;
+  --text-color: #fafafa;
+  --border-color: #484753;
+  --console-background: #131212;
+  --txt-color: #fff;
+  --x-box-shadow: 0 0 10px rgba(28 27 27 / 1);
 }

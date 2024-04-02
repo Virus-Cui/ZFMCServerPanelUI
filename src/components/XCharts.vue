@@ -1,5 +1,5 @@
 <script setup>
-import {ref, onMounted} from 'vue'
+import {ref, onMounted,watch} from 'vue'
 import * as echarts from 'echarts';
 
 const props = defineProps([
@@ -15,10 +15,38 @@ const props = defineProps([
 ])
 
 const chart = ref()
+const theme = ref()
+const themeTmp = ref()
+
+
+const change = ()=>{
+  if(themeTmp.value === 'auto'){
+    theme.value = 'dark'
+  }else {
+    theme.value = 'light'
+  }
+  chart.value.dispose()
+  initChart()
+}
+
+onMounted(()=>{
+  themeTmp.value = localStorage.getItem("useDarkKEY")
+  if(themeTmp.value === 'auto'){
+    theme.value = 'dark'
+  }else {
+    theme.value = 'light'
+  }
+  setInterval(()=>{
+    if(themeTmp.value !== localStorage.getItem("useDarkKEY")){
+      themeTmp.value = localStorage.getItem("useDarkKEY")
+      change()
+    }
+  },10)
+})
 
 const initChart = () => {
   var chartDom = document.getElementById(props.id);
-  var myChart = echarts.init(chartDom, 'dark');
+  var myChart = echarts.init(chartDom, theme.value);
   chart.value = myChart
   window.addEventListener("resize",()=>{
     setTimeout(()=>{
@@ -58,7 +86,7 @@ const initChart = () => {
     },
     series: props.data
   };
-  option && myChart.setOption(option);
+  option && myChart.setOption(option, true);
 }
 
 const setOptionFun = ()=>{

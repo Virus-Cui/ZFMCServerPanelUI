@@ -1,8 +1,10 @@
 <script setup>
 import {login} from "@/utils/auth.js";
 import {ref} from "vue";
+import {User,Lock} from "@element-plus/icons-vue";
 
 const formdata =ref({})
+const formRef = ref()
 
 const rules = {
   username: [
@@ -14,6 +16,11 @@ const rules = {
 }
 
 const doLogin = ()=>{
+  formRef.value.validate((res)=>{
+    console.log(res)
+  })
+
+
   login(formdata.value).then(resp=>{
 
   })
@@ -31,12 +38,12 @@ const doLogin = ()=>{
       </div>
       <div class="title">ZFMCPanel</div>
       <div class="form-container">
-        <el-form :model="formdata" :rules="rules">
+        <el-form :model="formdata" :rules="rules" ref="formRef">
           <el-form-item prop="username">
-            <el-input v-model="formdata.username" placeholder="用户名"></el-input>
+            <el-input v-model="formdata.username" placeholder="用户名" clearable :prefix-icon="User"></el-input>
           </el-form-item>
           <el-form-item prop="password">
-            <el-input v-model="formdata.password" placeholder="密码"></el-input>
+            <el-input v-model="formdata.password" placeholder="密码" type="password" clearable :prefix-icon="Lock"></el-input>
           </el-form-item>
           <el-form-item>
             <el-checkbox>
@@ -64,13 +71,18 @@ const doLogin = ()=>{
 }
 .login-box {
   width: 30rem;
-  //background: white;
+  background: white;
   border: 1px solid gray;
   padding: 1rem;
   backdrop-filter: blur(8px);
+  border-radius: 8px;
 }
 .title{
   text-align: center;
   line-height: 2rem;
+  color: #000;
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
 }
 </style>

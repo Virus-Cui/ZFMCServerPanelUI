@@ -48,15 +48,20 @@ const pageData = ref({})
 
 const ruleFormRef = ref()
 const uploaderRef = ref()
+const nowPage = ref(1);
 const rowStyle = () => {
   return "height: 60px"
 }
 
 onMounted(() => {
   search(1)
+  setInterval(()=>{
+    search(nowPage.value)
+  },10*60*1000)
 })
 
 const search = (page) => {
+  nowPage.value = page
   getAll(page, containerName.value).then(res => {
     pageData.value = res.data.data
   })
@@ -325,7 +330,7 @@ const stopBatchFun = ()=>{
             <el-form-item label="文件目录" v-if="formdata.model === '文件已存在'">
               <el-input v-model="formdata.workdir" placeholder="请输入实例文件目录"></el-input>
             </el-form-item>
-            <el-form-item label="配置项" v-if="modul === 0">
+            <el-form-item label="配置项">
               <el-checkbox label="自动启动" v-model="formdata.autoStart"></el-checkbox>
             </el-form-item>
           </el-form>

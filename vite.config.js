@@ -7,6 +7,12 @@ import vue from '@vitejs/plugin-vue'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+    server:{
+        watch:{
+            usePolling: true,
+        },
+        hmr: true
+    },
     plugins: [
         vue(),
         // monacoEditorPlugin({
